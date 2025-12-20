@@ -35,4 +35,4 @@ jobs:
           context: ./be
           file: ./be/Dockerfile
           push: true
-          tags: your-dockerhub-username/mylaundry:latest
+          tags: thanhlongg/mylaundry:latest
