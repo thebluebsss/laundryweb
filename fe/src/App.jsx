@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import Header from "./components/Header.jsx";
-// import HeaderTop from "./components/HeaderTop.jsx";
 import Navbar from "./components/Navbar.jsx";
 import Services from "./components/Services.jsx";
 import { Routes, Route, useLocation, useNavigate } from "react-router-dom";
@@ -17,17 +16,22 @@ import ProductsPage from "./pages/ProductsPage.jsx";
 import "./index.css";
 
 function App() {
-  const [userRole, setUserRole] = useState(localStorage.getItem("userRole"));
+  const [userRole, setUserRole] = useState(() =>
+    localStorage.getItem("userRole")
+  );
   const [bookingData, setBookingData] = useState(null);
   const location = useLocation();
   const navigate = useNavigate();
 
   useEffect(() => {
     const checkUserRole = () => {
-      setUserRole(localStorage.getItem("userRole"));
+      const role = localStorage.getItem("userRole");
+      console.log("App.jsx - Current user role:", role);
+      setUserRole(role);
     };
 
     checkUserRole();
+
     window.addEventListener("storage", checkUserRole);
 
     return () => window.removeEventListener("storage", checkUserRole);
@@ -44,7 +48,9 @@ function App() {
     <div className="App">
       {userRole && !isLoginPage && <Header />}
 
-      {userRole === "guest" && !isLoginPage && <Navbar />}
+      {(userRole === "guest" || userRole === "user") && !isLoginPage && (
+        <Navbar />
+      )}
 
       <main>
         <Routes>
@@ -62,7 +68,7 @@ function App() {
           <Route
             path="/home"
             element={
-              <ProtectedRoute requiredRole="guest">
+              <ProtectedRoute requiredRole={["guest", "user"]}>
                 <HomePage />
               </ProtectedRoute>
             }
@@ -71,7 +77,7 @@ function App() {
           <Route
             path="/ve-chung-toi"
             element={
-              <ProtectedRoute requiredRole="guest">
+              <ProtectedRoute requiredRole={["guest", "user"]}>
                 <div style={{ padding: "20px", textAlign: "center" }}>
                   <h2>Về Chúng Tôi</h2>
                   <p>Đang load ...</p>
@@ -83,7 +89,7 @@ function App() {
           <Route
             path="/dich-vu"
             element={
-              <ProtectedRoute requiredRole="guest">
+              <ProtectedRoute requiredRole={["guest", "user"]}>
                 <Services />
               </ProtectedRoute>
             }
@@ -92,7 +98,7 @@ function App() {
           <Route
             path="/bang-gia"
             element={
-              <ProtectedRoute requiredRole="guest">
+              <ProtectedRoute requiredRole={["guest", "user"]}>
                 <PricePage />
               </ProtectedRoute>
             }
@@ -101,7 +107,7 @@ function App() {
           <Route
             path="/tin-tuc"
             element={
-              <ProtectedRoute requiredRole="guest">
+              <ProtectedRoute requiredRole={["guest", "user"]}>
                 <div style={{ padding: "20px", textAlign: "center" }}>
                   <h2>Tin Tức</h2>
                   <p>Đang load ...</p>
@@ -113,15 +119,16 @@ function App() {
           <Route
             path="/dat-lich"
             element={
-              <ProtectedRoute requiredRole="guest">
+              <ProtectedRoute requiredRole={["guest", "user"]}>
                 <BookingForm onSuccess={handleBookingSuccess} />
               </ProtectedRoute>
             }
           />
+
           <Route
             path="/dat-lich-thanh-cong"
             element={
-              <ProtectedRoute requiredRole="guest">
+              <ProtectedRoute requiredRole={["guest", "user"]}>
                 {bookingData ? (
                   <BookingSuccessPage
                     bookingData={bookingData}
@@ -155,7 +162,7 @@ function App() {
           <Route
             path="/san-pham"
             element={
-              <ProtectedRoute requiredRole="guest">
+              <ProtectedRoute requiredRole={["guest", "user"]}>
                 <ProductsPage />
               </ProtectedRoute>
             }
@@ -164,7 +171,7 @@ function App() {
           <Route
             path="/lien-he"
             element={
-              <ProtectedRoute requiredRole="guest">
+              <ProtectedRoute requiredRole={["guest", "user"]}>
                 <div style={{ padding: "20px", textAlign: "center" }}>
                   <h2>Liên Hệ</h2>
                   <p>Đang load ...</p>
@@ -175,7 +182,7 @@ function App() {
         </Routes>
       </main>
 
-      {userRole === "guest" && !isLoginPage && (
+      {(userRole === "guest" || userRole === "user") && !isLoginPage && (
         <>
           <Footer />
           <ChatBot />

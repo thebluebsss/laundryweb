@@ -2,9 +2,12 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
+import jwt from "jsonwebtoken";
 import Groq from "groq-sdk";
 import Booking from "./Booking.js";
 import Product from "./Product.js";
+import User from "./User.js";
+import Equipment from "./Equipment.js";
 
 dotenv.config();
 
@@ -12,14 +15,51 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-this";
+
+// Middleware xác thực token
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers["authorization"];
+  const token = authHeader && authHeader.split(" ")[1];
+
+  if (!token) {
+    return res.status(401).json({
+      success: false,
+      message: "Không tìm thấy token xác thực",
+    });
+  }
+
+  jwt.verify(token, JWT_SECRET, (err, user) => {
+    if (err) {
+      return res.status(403).json({
+        success: false,
+        message: "Token không hợp lệ hoặc đã hết hạn",
+      });
+    }
+    req.user = user;
+    next();
+  });
+};
+
+// Middleware kiểm tra quyền admin
+const requireAdmin = (req, res, next) => {
+  if (req.user.role !== "admin") {
+    return res.status(403).json({
+      success: false,
+      message: "Bạn không có quyền thực hiện thao tác này",
+    });
+  }
+  next();
+};
+
 const connectDB = async () => {
   try {
     await mongoose.connect(
       process.env.MONGODB_URI || "mongodb://localhost:27017/laundry-booking"
     );
-    console.log("MongoDB đã kết nối thành công!");
+    console.log("✅ MongoDB đã kết nối thành công!");
   } catch (error) {
-    console.error(" Lỗi kết nối MongoDB:", error.message);
+    console.error("❌ Lỗi kết nối MongoDB:", error.message);
   }
 };
 
@@ -32,247 +72,152 @@ if (process.env.GROQ_API_KEY) {
   });
 }
 
-const SYSTEM_PROMPT = `Bạn là trợ lý AI thân thiện của dịch vụ giặt ủi. Nhiệm vụ của bạn:
-
-📋 THÔNG TIN DỊCH VỤ:
-1. Giặt hấp/sấy khô (15.000đ/kg - giặt + sấy + gấp)
-2. Giặt ủi (20.000đ/kg - giặt + ủi + gấp)
-3. Giặt hơi nước (18.000đ/kg - giặt hơi nước + sấy)
-4. Giặt khô (Dry Clean) - từ 50.000đ/món tùy loại vải
-
-🎯 ƯU ĐÃI:
-- Giặt từ 5kg: giảm 5%
-- Giặt từ 10kg: giảm 10%
-- Khách hàng thân thiết: giảm thêm 5%
-
-⏰ THỜI GIAN:
-- Giặt hấp/sấy: 24h
-- Giặt ủi: 48h
-- Giặt khô: 3-5 ngày
-
-📍 DỊCH VỤ BỔ SUNG:
-- Nhận/giao tận nơi miễn phí (trong bán kính 5km)
-- Giặt gấp 24h: +50% phí
-- Sử dụng túi chuyên dụng: +5.000đ
-
-🧴 LỰA CHỌN:
-- Nước giặt: Omo, Ariel, Tide
-- Nước xả: Comfort, Downy
-- Chất tẩy: Có/Không
-
-🛍️ SẢN PHẨM BÁN KÈM:
-- Bột giặt cao cấp: Omo, Ariel, Tide (từ 89.000đ)
-- Nước xả vải: Comfort, Downy (từ 65.000đ)
-- Túi giặt chuyên dụng: 25.000đ
-- Phụ kiện giặt ủi khác
-
-CÁCH TRẢ LỜI:
-- Thân thiện, nhiệt tình
-- Trả lời ngắn gọn, dễ hiểu
-- Gợi ý dịch vụ phù hợp
-- Hướng dẫn đặt lịch nếu khách hỏi
-- Tư vấn sản phẩm nếu khách quan tâm
-- Không bịa đặt thông tin không có
-
-Nếu khách hỏi về đặt lịch, hãy nói: "Bạn có thể đặt lịch ngay trên website hoặc gọi hotline để được hỗ trợ nhanh hơn nhé!"
-Nếu khách hỏi về sản phẩm, hãy giới thiệu các sản phẩm phù hợp.`;
-
-const getRecommendedProducts = async (booking) => {
-  try {
-    const recommendations = [];
-
-    const serviceType = booking.service.toLowerCase();
-
-    if (serviceType.includes("giặt") || serviceType.includes("wash")) {
-      const detergents = await Product.find({
-        category: "detergent",
-        isActive: true,
-      })
-        .limit(2)
-        .sort({ soldCount: -1 });
-
-      const softeners = await Product.find({
-        category: "softener",
-        isActive: true,
-      })
-        .limit(1)
-        .sort({ soldCount: -1 });
-
-      recommendations.push(...detergents, ...softeners);
-    }
-
-    if (serviceType.includes("khô") || serviceType.includes("dry")) {
-      const bags = await Product.find({
-        category: "bag",
-        isActive: true,
-      }).limit(2);
-
-      recommendations.push(...bags);
-    }
-
-    if (booking.useBag === "Không" || !booking.useBag) {
-      const bag = await Product.findOne({
-        category: "bag",
-        isActive: true,
-      }).sort({ soldCount: -1 });
-
-      if (bag && !recommendations.find((p) => p._id.equals(bag._id))) {
-        recommendations.push(bag);
-      }
-    }
-
-    const accessories = await Product.find({
-      category: "accessory",
-      isActive: true,
-    })
-      .limit(1)
-      .sort({ rating: -1 });
-
-    recommendations.push(...accessories);
-
-    const uniqueProducts = recommendations
-      .filter(
-        (product, index, self) =>
-          index === self.findIndex((p) => p._id.equals(product._id))
-      )
-      .slice(0, 4);
-
-    return uniqueProducts;
-  } catch (error) {
-    console.error("Lỗi khi lấy sản phẩm gợi ý:", error);
-    return [];
-  }
-};
-
-app.post("/api/chat", async (req, res) => {
-  try {
-    const { message } = req.body;
-    console.log("📩 Nhận tin nhắn:", message);
-
-    if (!groq) {
-      return res.json({
-        reply: "⚠️ Chatbot chưa được cấu hình. Vui lòng liên hệ admin.",
-      });
-    }
-
-    const chatCompletion = await groq.chat.completions.create({
-      messages: [
-        {
-          role: "system",
-          content: SYSTEM_PROMPT,
-        },
-        {
-          role: "user",
-          content: message,
-        },
-      ],
-      model: "llama-3.3-70b-versatile",
-      temperature: 0.7,
-      max_tokens: 1024,
-    });
-
-    const reply = chatCompletion.choices[0]?.message?.content;
-    console.log(" Bot trả lời:", reply);
-
-    res.json({ reply });
-  } catch (error) {
-    console.error("❌ Lỗi:", error.message);
-    return res.json({
-      reply: "Xin lỗi, tôi đang gặp sự cố vui lòng thử lại sau ",
-    });
-  }
+// ===================== HEALTH CHECK =====================
+app.get("/api/health", (req, res) => {
+  res.json({
+    success: true,
+    message: "Server is running!",
+    timestamp: new Date(),
+    database:
+      mongoose.connection.readyState === 1 ? "Connected" : "Disconnected",
+  });
 });
 
-app.post("/api/create-booking", async (req, res) => {
+// ===================== AUTH APIs =====================
+
+app.post("/api/auth/register", async (req, res) => {
   try {
-    const {
-      name,
-      phone,
-      address,
-      service,
-      pickupDate,
-      deliveryDate,
-      detergent,
-      bleach,
-      useBag,
-      dryCleaningItems,
-      notes,
-      paymentMethod,
-    } = req.body;
+    const { username, email, password, fullName, phone, address } = req.body;
 
-    if (!name || !phone || !address || !service) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Vui lòng điền đầy đủ thông tin bắt buộc (tên, số điện thoại, địa chỉ, dịch vụ)",
-      });
-    }
-
-    const newBooking = new Booking({
-      name,
-      phone,
-      address,
-      service,
-      pickupDate: pickupDate || null,
-      deliveryDate: deliveryDate || null,
-      detergent: detergent || "Omo",
-      bleach: bleach || "Sử dụng",
-      useBag: useBag || "Có",
-      dryCleaningItems: dryCleaningItems || false,
-      notes: notes || "",
-      paymentMethod: paymentMethod || "cod",
-      status: "pending",
-      paymentStatus: "unpaid",
+    const existingUser = await User.findOne({
+      $or: [{ email }, { username }],
     });
 
-    await newBooking.save();
-
-    console.log("✅ Đơn hàng mới:", newBooking._id);
-
-    const recommendedProducts = await getRecommendedProducts(newBooking);
-
-    if (paymentMethod === "online") {
-      return res.status(201).json({
-        success: true,
-        message: "Đơn hàng đã được tạo! Đang chuyển đến trang thanh toán...",
-        booking: newBooking,
-        recommendedProducts,
-        paymentUrl: `http://localhost:3000/payment?bookingId=${newBooking._id}`,
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: "Email hoặc tên đăng nhập đã tồn tại",
       });
     }
+
+    const user = new User({
+      username,
+      email,
+      password,
+      fullName,
+      phone,
+      address: address || "",
+      role: "user",
+    });
+
+    await user.save();
+
+    const token = jwt.sign(
+      { id: user._id, username: user.username, role: user.role },
+      JWT_SECRET,
+      { expiresIn: "7d" }
+    );
 
     res.status(201).json({
       success: true,
-      message: "Đặt lịch thành công! Chúng tôi sẽ liên hệ với bạn sớm.",
-      booking: newBooking,
-      recommendedProducts,
+      message: "Đăng ký thành công!",
+      token,
+      user: user.toJSON(),
     });
   } catch (error) {
-    console.error("Lỗi tạo đơn hàng:", error);
+    console.error("❌ Lỗi đăng ký:", error);
     res.status(500).json({
       success: false,
-      message: "Lỗi server. Vui lòng thử lại sau.",
+      message: "Lỗi server khi đăng ký",
       error: error.message,
     });
   }
 });
 
-app.get("/api/bookings", async (req, res) => {
+app.post("/api/auth/login", async (req, res) => {
+  try {
+    const { username, password } = req.body;
+
+    const user = await User.findOne({ username });
+
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "Tên đăng nhập hoặc mật khẩu không đúng",
+      });
+    }
+
+    if (!user.isActive) {
+      return res.status(403).json({
+        success: false,
+        message: "Tài khoản đã bị khóa",
+      });
+    }
+
+    const isMatch = await user.comparePassword(password);
+
+    if (!isMatch) {
+      return res.status(401).json({
+        success: false,
+        message: "Tên đăng nhập hoặc mật khẩu không đúng",
+      });
+    }
+
+    user.lastLogin = new Date();
+    await user.save();
+
+    const token = jwt.sign(
+      { id: user._id, username: user.username, role: user.role },
+      JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    res.json({
+      success: true,
+      message: "Đăng nhập thành công!",
+      token,
+      user: user.toJSON(),
+    });
+  } catch (error) {
+    console.error("❌ Lỗi đăng nhập:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi server khi đăng nhập",
+      error: error.message,
+    });
+  }
+});
+
+// ===================== USER MANAGEMENT APIs =====================
+
+app.get("/api/users", authenticateToken, requireAdmin, async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
+    const search = req.query.search || "";
 
-    const bookings = await Booking.find()
+    const query = {};
+
+    if (search) {
+      query.$or = [
+        { username: { $regex: search, $options: "i" } },
+        { email: { $regex: search, $options: "i" } },
+        { fullName: { $regex: search, $options: "i" } },
+        { phone: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    const users = await User.find(query)
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
 
-    const total = await Booking.countDocuments();
+    const total = await User.countDocuments(query);
 
     res.json({
       success: true,
-      data: bookings,
+      data: users,
       pagination: {
         page,
         limit,
@@ -281,10 +226,258 @@ app.get("/api/bookings", async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Lỗi lấy danh sách:", error);
+    console.error("❌ Lỗi:", error);
     res.status(500).json({
       success: false,
-      message: "Không thể lấy danh sách đơn hàng",
+      message: "Lỗi khi lấy danh sách người dùng",
+      error: error.message,
+    });
+  }
+});
+
+app.get("/api/users/:id", authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy người dùng",
+      });
+    }
+
+    res.json({
+      success: true,
+      data: user.toJSON(),
+    });
+  } catch (error) {
+    console.error("❌ Lỗi:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi lấy thông tin người dùng",
+      error: error.message,
+    });
+  }
+});
+
+app.post("/api/users", authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const { username, email, password, fullName, phone, role, address } =
+      req.body;
+
+    const existingUser = await User.findOne({
+      $or: [{ email }, { username }],
+    });
+
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: "Email hoặc tên đăng nhập đã tồn tại",
+      });
+    }
+
+    const user = new User({
+      username,
+      email,
+      password,
+      fullName,
+      phone,
+      role: role || "user",
+      address: address || "",
+    });
+
+    await user.save();
+
+    res.status(201).json({
+      success: true,
+      message: "Tạo người dùng thành công!",
+      data: user.toJSON(),
+    });
+  } catch (error) {
+    console.error("❌ Lỗi:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi tạo người dùng",
+      error: error.message,
+    });
+  }
+});
+
+app.patch(
+  "/api/users/:id",
+  authenticateToken,
+  requireAdmin,
+  async (req, res) => {
+    try {
+      const { password, ...updateData } = req.body;
+
+      if (password) {
+        const bcrypt = await import("bcryptjs");
+        const salt = await bcrypt.genSalt(10);
+        updateData.password = await bcrypt.hash(password, salt);
+      }
+
+      const user = await User.findByIdAndUpdate(req.params.id, updateData, {
+        new: true,
+        runValidators: true,
+      });
+
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: "Không tìm thấy người dùng",
+        });
+      }
+
+      res.json({
+        success: true,
+        message: "Cập nhật người dùng thành công!",
+        data: user.toJSON(),
+      });
+    } catch (error) {
+      console.error("❌ Lỗi:", error);
+      res.status(500).json({
+        success: false,
+        message: "Lỗi khi cập nhật người dùng",
+        error: error.message,
+      });
+    }
+  }
+);
+
+app.delete(
+  "/api/users/:id",
+  authenticateToken,
+  requireAdmin,
+  async (req, res) => {
+    try {
+      if (req.params.id === req.user.id) {
+        return res.status(400).json({
+          success: false,
+          message: "Không thể xóa tài khoản của chính mình",
+        });
+      }
+
+      const user = await User.findByIdAndDelete(req.params.id);
+
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: "Không tìm thấy người dùng",
+        });
+      }
+
+      res.json({
+        success: true,
+        message: "Đã xóa người dùng thành công!",
+      });
+    } catch (error) {
+      console.error("❌ Lỗi:", error);
+      res.status(500).json({
+        success: false,
+        message: "Lỗi khi xóa người dùng",
+        error: error.message,
+      });
+    }
+  }
+);
+
+app.patch(
+  "/api/users/:id/toggle-active",
+  authenticateToken,
+  requireAdmin,
+  async (req, res) => {
+    try {
+      const user = await User.findById(req.params.id);
+
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: "Không tìm thấy người dùng",
+        });
+      }
+
+      user.isActive = !user.isActive;
+      await user.save();
+
+      res.json({
+        success: true,
+        message: `Đã ${user.isActive ? "kích hoạt" : "vô hiệu hóa"} tài khoản!`,
+        data: user.toJSON(),
+      });
+    } catch (error) {
+      console.error("❌ Lỗi:", error);
+      res.status(500).json({
+        success: false,
+        message: "Lỗi khi cập nhật trạng thái",
+        error: error.message,
+      });
+    }
+  }
+);
+
+app.get(
+  "/api/users-stats",
+  authenticateToken,
+  requireAdmin,
+  async (req, res) => {
+    try {
+      const total = await User.countDocuments();
+      const active = await User.countDocuments({ isActive: true });
+      const inactive = await User.countDocuments({ isActive: false });
+      const admins = await User.countDocuments({ role: "admin" });
+      const users = await User.countDocuments({ role: "user" });
+
+      res.json({
+        success: true,
+        stats: {
+          total,
+          active,
+          inactive,
+          admins,
+          users,
+        },
+      });
+    } catch (error) {
+      console.error("❌ Lỗi:", error);
+      res.status(500).json({
+        success: false,
+        message: "Lỗi khi lấy thống kê",
+        error: error.message,
+      });
+    }
+  }
+);
+
+// ===================== BOOKING APIs =====================
+
+app.get("/api/bookings", async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const total = await Booking.countDocuments();
+    const bookings = await Booking.find()
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    res.json({
+      success: true,
+      data: bookings,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(total / limit),
+        totalItems: total,
+        itemsPerPage: limit,
+      },
+    });
+  } catch (error) {
+    console.error("Lỗi lấy bookings:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi tải đơn hàng",
       error: error.message,
     });
   }
@@ -306,10 +499,10 @@ app.get("/api/bookings/:id", async (req, res) => {
       data: booking,
     });
   } catch (error) {
-    console.error(" Lỗi:", error);
+    console.error("Lỗi lấy booking:", error);
     res.status(500).json({
       success: false,
-      message: "Lỗi khi lấy thông tin đơn hàng",
+      message: "Lỗi khi tải đơn hàng",
       error: error.message,
     });
   }
@@ -317,9 +510,12 @@ app.get("/api/bookings/:id", async (req, res) => {
 
 app.get("/api/bookings/phone/:phone", async (req, res) => {
   try {
-    const bookings = await Booking.find({ phone: req.params.phone }).sort({
-      createdAt: -1,
-    });
+    const phone = req.params.phone;
+    const bookings = await Booking.find({ phone: new RegExp(phone, "i") }).sort(
+      {
+        createdAt: -1,
+      }
+    );
 
     res.json({
       success: true,
@@ -327,10 +523,10 @@ app.get("/api/bookings/phone/:phone", async (req, res) => {
       count: bookings.length,
     });
   } catch (error) {
-    console.error(" Lỗi:", error);
+    console.error("Lỗi tìm kiếm:", error);
     res.status(500).json({
       success: false,
-      message: "Lỗi khi tìm kiếm đơn hàng",
+      message: "Lỗi khi tìm kiếm",
       error: error.message,
     });
   }
@@ -338,16 +534,20 @@ app.get("/api/bookings/phone/:phone", async (req, res) => {
 
 app.patch("/api/bookings/:id/status", async (req, res) => {
   try {
-    const { status, paymentStatus } = req.body;
+    const { status } = req.body;
 
-    const updateData = {};
-    if (status) updateData.status = status;
-    if (paymentStatus) updateData.paymentStatus = paymentStatus;
+    if (!status) {
+      return res.status(400).json({
+        success: false,
+        message: "Thiếu trạng thái",
+      });
+    }
 
-    const booking = await Booking.findByIdAndUpdate(req.params.id, updateData, {
-      new: true,
-      runValidators: true,
-    });
+    const booking = await Booking.findByIdAndUpdate(
+      req.params.id,
+      { status },
+      { new: true }
+    );
 
     if (!booking) {
       return res.status(404).json({
@@ -358,11 +558,11 @@ app.patch("/api/bookings/:id/status", async (req, res) => {
 
     res.json({
       success: true,
-      message: "Cập nhật trạng thái thành công",
       data: booking,
+      message: "Đã cập nhật trạng thái",
     });
   } catch (error) {
-    console.error(" Lỗi:", error);
+    console.error("Lỗi cập nhật:", error);
     res.status(500).json({
       success: false,
       message: "Lỗi khi cập nhật trạng thái",
@@ -387,10 +587,35 @@ app.delete("/api/bookings/:id", async (req, res) => {
       message: "Đã xóa đơn hàng thành công",
     });
   } catch (error) {
-    console.error("❌ Lỗi:", error);
+    console.error("Lỗi xóa:", error);
     res.status(500).json({
       success: false,
       message: "Lỗi khi xóa đơn hàng",
+      error: error.message,
+    });
+  }
+});
+
+app.post("/api/bookings", async (req, res) => {
+  try {
+    const booking = new Booking({
+      ...req.body,
+      status: "pending",
+      createdAt: new Date(),
+    });
+
+    await booking.save();
+
+    res.status(201).json({
+      success: true,
+      data: booking,
+      message: "Đặt lịch thành công",
+    });
+  } catch (error) {
+    console.error("Lỗi tạo booking:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi tạo đơn hàng",
       error: error.message,
     });
   }
@@ -400,7 +625,9 @@ app.get("/api/stats", async (req, res) => {
   try {
     const total = await Booking.countDocuments();
     const pending = await Booking.countDocuments({ status: "pending" });
-    const confirmed = await Booking.countDocuments({ status: "confirmed" });
+    const confirmed = await Booking.countDocuments({
+      status: { $in: ["confirmed", "processing"] },
+    });
     const completed = await Booking.countDocuments({ status: "completed" });
     const cancelled = await Booking.countDocuments({ status: "cancelled" });
 
@@ -415,24 +642,133 @@ app.get("/api/stats", async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("❌ Lỗi:", error);
+    console.error("Lỗi lấy stats:", error);
     res.status(500).json({
       success: false,
-      message: "Lỗi khi lấy thống kê",
+      message: "Lỗi khi tải thống kê",
       error: error.message,
     });
   }
 });
 
+// ===================== EQUIPMENT APIs =====================
+
+app.get("/api/equipment", authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const equipment = await Equipment.find().sort({ createdAt: -1 });
+
+    res.json({
+      success: true,
+      data: equipment,
+      count: equipment.length,
+    });
+  } catch (error) {
+    console.error("Lỗi lấy thiết bị:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi tải danh sách thiết bị",
+      error: error.message,
+    });
+  }
+});
+
+app.post(
+  "/api/equipment",
+  authenticateToken,
+  requireAdmin,
+  async (req, res) => {
+    try {
+      const equipment = new Equipment(req.body);
+      await equipment.save();
+
+      res.status(201).json({
+        success: true,
+        message: "Thêm thiết bị thành công",
+        data: equipment,
+      });
+    } catch (error) {
+      console.error("Lỗi thêm thiết bị:", error);
+      res.status(400).json({
+        success: false,
+        message: "Lỗi khi thêm thiết bị",
+        error: error.message,
+      });
+    }
+  }
+);
+
+app.patch(
+  "/api/equipment/:id",
+  authenticateToken,
+  requireAdmin,
+  async (req, res) => {
+    try {
+      const equipment = await Equipment.findByIdAndUpdate(
+        req.params.id,
+        req.body,
+        { new: true, runValidators: true }
+      );
+
+      if (!equipment) {
+        return res.status(404).json({
+          success: false,
+          message: "Không tìm thấy thiết bị",
+        });
+      }
+
+      res.json({
+        success: true,
+        message: "Cập nhật thiết bị thành công",
+        data: equipment,
+      });
+    } catch (error) {
+      console.error("Lỗi cập nhật thiết bị:", error);
+      res.status(400).json({
+        success: false,
+        message: "Lỗi khi cập nhật thiết bị",
+        error: error.message,
+      });
+    }
+  }
+);
+
+app.delete(
+  "/api/equipment/:id",
+  authenticateToken,
+  requireAdmin,
+  async (req, res) => {
+    try {
+      const equipment = await Equipment.findByIdAndDelete(req.params.id);
+
+      if (!equipment) {
+        return res.status(404).json({
+          success: false,
+          message: "Không tìm thấy thiết bị",
+        });
+      }
+
+      res.json({
+        success: true,
+        message: "Xóa thiết bị thành công",
+      });
+    } catch (error) {
+      console.error("Lỗi xóa thiết bị:", error);
+      res.status(500).json({
+        success: false,
+        message: "Lỗi khi xóa thiết bị",
+        error: error.message,
+      });
+    }
+  }
+);
+
+// ===================== PRODUCT APIs =====================
+
 app.get("/api/products", async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 12;
-    const skip = (page - 1) * limit;
-    const category = req.query.category;
-    const search = req.query.search;
+    const { category, search, minPrice, maxPrice, sort } = req.query;
 
-    const query = { isActive: true };
+    let query = { isActive: true };
 
     if (category && category !== "all") {
       query.category = category;
@@ -442,190 +778,77 @@ app.get("/api/products", async (req, res) => {
       query.$or = [
         { name: { $regex: search, $options: "i" } },
         { description: { $regex: search, $options: "i" } },
+        { brand: { $regex: search, $options: "i" } },
         { tags: { $in: [new RegExp(search, "i")] } },
       ];
     }
 
-    const products = await Product.find(query)
-      .sort({ soldCount: -1, createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
+    if (minPrice || maxPrice) {
+      query.price = {};
+      if (minPrice) query.price.$gte = Number(minPrice);
+      if (maxPrice) query.price.$lte = Number(maxPrice);
+    }
 
-    const total = await Product.countDocuments(query);
+    let sortOption = {};
+    switch (sort) {
+      case "price-asc":
+        sortOption = { price: 1 };
+        break;
+      case "price-desc":
+        sortOption = { price: -1 };
+        break;
+      case "popular":
+        sortOption = { soldCount: -1 };
+        break;
+      case "rating":
+        sortOption = { rating: -1 };
+        break;
+      case "newest":
+        sortOption = { createdAt: -1 };
+        break;
+      default:
+        sortOption = { soldCount: -1 };
+    }
+
+    const products = await Product.find(query).sort(sortOption);
 
     res.json({
       success: true,
       data: products,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-      },
+      count: products.length,
     });
   } catch (error) {
-    console.error("❌ Lỗi lấy sản phẩm:", error);
+    console.error("Lỗi lấy sản phẩm:", error);
     res.status(500).json({
       success: false,
-      message: "Không thể lấy danh sách sản phẩm",
+      message: "Lỗi server khi lấy sản phẩm",
       error: error.message,
     });
   }
 });
 
-app.get("/api/products/:id", async (req, res) => {
-  try {
-    const product = await Product.findById(req.params.id);
-
-    if (!product) {
-      return res.status(404).json({
-        success: false,
-        message: "Không tìm thấy sản phẩm",
-      });
-    }
-
-    res.json({
-      success: true,
-      data: product,
-    });
-  } catch (error) {
-    console.error("❌ Lỗi:", error);
-    res.status(500).json({
-      success: false,
-      message: "Lỗi khi lấy thông tin sản phẩm",
-      error: error.message,
-    });
-  }
-});
-
-app.post("/api/products", async (req, res) => {
-  try {
-    const newProduct = new Product(req.body);
-    await newProduct.save();
-
-    res.status(201).json({
-      success: true,
-      message: "Tạo sản phẩm thành công",
-      data: newProduct,
-    });
-  } catch (error) {
-    console.error("❌ Lỗi tạo sản phẩm:", error);
-    res.status(500).json({
-      success: false,
-      message: "Lỗi khi tạo sản phẩm",
-      error: error.message,
-    });
-  }
-});
-
-app.patch("/api/products/:id", async (req, res) => {
-  try {
-    const product = await Product.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    });
-
-    if (!product) {
-      return res.status(404).json({
-        success: false,
-        message: "Không tìm thấy sản phẩm",
-      });
-    }
-
-    res.json({
-      success: true,
-      message: "Cập nhật sản phẩm thành công",
-      data: product,
-    });
-  } catch (error) {
-    console.error("❌ Lỗi:", error);
-    res.status(500).json({
-      success: false,
-      message: "Lỗi khi cập nhật sản phẩm",
-      error: error.message,
-    });
-  }
-});
-
-app.delete("/api/products/:id", async (req, res) => {
-  try {
-    const product = await Product.findByIdAndDelete(req.params.id);
-
-    if (!product) {
-      return res.status(404).json({
-        success: false,
-        message: "Không tìm thấy sản phẩm",
-      });
-    }
-
-    res.json({
-      success: true,
-      message: "Đã xóa sản phẩm thành công",
-    });
-  } catch (error) {
-    console.error("❌ Lỗi:", error);
-    res.status(500).json({
-      success: false,
-      message: "Lỗi khi xóa sản phẩm",
-      error: error.message,
-    });
-  }
-});
-
-app.get("/api/recommendations/:bookingId", async (req, res) => {
-  try {
-    const booking = await Booking.findById(req.params.bookingId);
-
-    if (!booking) {
-      return res.status(404).json({
-        success: false,
-        message: "Không tìm thấy đơn hàng",
-      });
-    }
-
-    const recommendations = await getRecommendedProducts(booking);
-
-    res.json({
-      success: true,
-      data: recommendations,
-    });
-  } catch (error) {
-    console.error("❌ Lỗi:", error);
-    res.status(500).json({
-      success: false,
-      message: "Lỗi khi lấy sản phẩm gợi ý",
-      error: error.message,
-    });
-  }
-});
-
-app.get("/", (req, res) => {
-  res.json({
-    status: "ok",
-    message: "🧺 Laundry Booking API với Chatbot & Shop",
-    hasGroqAPI: !!groq,
-    endpoints: {
-      "POST /api/chat": "Chatbot AI",
-      "POST /api/create-booking": "Tạo đơn hàng mới",
-      "GET /api/bookings": "Lấy danh sách đơn hàng",
-      "GET /api/bookings/:id": "Lấy đơn hàng theo ID",
-      "GET /api/bookings/phone/:phone": "Tìm đơn hàng theo SĐT",
-      "PATCH /api/bookings/:id/status": "Cập nhật trạng thái",
-      "DELETE /api/bookings/:id": "Xóa đơn hàng",
-      "GET /api/stats": "Thống kê",
-      "GET /api/products": "Danh sách sản phẩm",
-      "GET /api/products/:id": "Chi tiết sản phẩm",
-      "POST /api/products": "Tạo sản phẩm (Admin)",
-      "PATCH /api/products/:id": "Cập nhật sản phẩm (Admin)",
-      "DELETE /api/products/:id": "Xóa sản phẩm (Admin)",
-      "GET /api/recommendations/:bookingId": "Gợi ý sản phẩm cho đơn hàng",
-    },
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    message: "Route not found",
+    path: req.path,
   });
 });
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
-  console.log(`\n Server đang chạy tại: http://localhost:${PORT}`);
-  console.log(`Groq API: ${groq ? "Đã kết nối ✓" : "Chưa có key ✗"}`);
-  console.log(`API endpoint: http://localhost:${PORT}/api/create-booking\n`);
+  console.log("\n ================================");
+  console.log(`   Server đang chạy tại: http://localhost:${PORT}`);
+  console.log(" ================================");
+  console.log(` API Base: http://localhost:${PORT}/api`);
+  console.log(` Auth: /api/auth/login, /api/auth/register`);
+  console.log(` Users: /api/users`);
+  console.log(` Bookings: /api/bookings`);
+  console.log(` Stats: /api/stats`);
+  console.log(`  Products: /api/products`);
+  console.log(` Equipment: /api/equipment`);
+  console.log(` Health: /api/health`);
+  console.log(`Groq API: ${groq ? "Đã kết nối" : " Chưa có key"}`);
+  console.log(" ================================\n");
 });
