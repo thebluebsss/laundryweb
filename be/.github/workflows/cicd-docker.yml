@@ -1,0 +1,68 @@
+name: CI/CD Docker - MY-LAUNDRY-APP
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  build-and-push:
+    name: Build & Push Docker Images
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout source code
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      # 2. Set up Docker Buildx
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # 3. Login to Docker Hub
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # 4. Build and push Backend image
+      - name: Build and push Backend Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./be
+          file: ./be/Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/laundry-app-backend:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/laundry-app-backend:${{ github.sha }}
+
+      # 5. Build and push Frontend image
+      - name: Build and push Frontend Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./fe
+          file: ./fe/Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/laundry-app-frontend:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/laundry-app-frontend:${{ github.sha }}
+
+  # Optional: Deploy job
+  # deploy:
+  #   name: Deploy to Server
+  #   runs-on: ubuntu-latest
+  #   needs: build-and-push
+  #   steps:
+  #     - name: Deploy via SSH
+  #       uses: appleboy/ssh-action@v1.0.3
+  #       with:
+  #         host: ${{ secrets.SERVER_HOST }}
+  #         username: ${{ secrets.SERVER_USER }}
+  #         key: ${{ secrets.SERVER_SSH_KEY }}
+  #         script: |
+  #           cd /opt/laundry-app
+  #           docker compose pull
+  #           docker compose down
+  #           docker compose up -d
