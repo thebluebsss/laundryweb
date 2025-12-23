@@ -8,6 +8,8 @@ import Booking from "./Booking.js";
 import Product from "./Product.js";
 import User from "./User.js";
 import Equipment from "./Equipment.js";
+import { sendOTPEmail, sendPasswordResetConfirmation } from "./emailService.js";
+import { sendOTPSMS, sendPasswordResetSMS } from "./smsService.js";
 
 dotenv.config();
 
@@ -17,7 +19,6 @@ app.use(express.json());
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-this";
 
-// Middleware xác thực token
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers["authorization"];
   const token = authHeader && authHeader.split(" ")[1];
@@ -41,7 +42,6 @@ const authenticateToken = (req, res, next) => {
   });
 };
 
-// Middleware kiểm tra quyền admin
 const requireAdmin = (req, res, next) => {
   if (req.user.role !== "admin") {
     return res.status(403).json({
@@ -188,7 +188,235 @@ app.post("/api/auth/login", async (req, res) => {
   }
 });
 
-// ===================== USER MANAGEMENT APIs =====================
+app.post("/api/auth/forgot-password", async (req, res) => {
+  try {
+    const { email, phone, method } = req.body;
+
+    // Kiểm tra phương thức
+    if (!method || (method !== "email" && method !== "phone")) {
+      return res.status(400).json({
+        success: false,
+        message: "Phương thức không hợp lệ",
+      });
+    }
+
+    // Kiểm tra thông tin theo phương thức
+    if (method === "email" && !email) {
+      return res.status(400).json({
+        success: false,
+        message: "Vui lòng nhập email",
+      });
+    }
+
+    if (method === "phone" && !phone) {
+      return res.status(400).json({
+        success: false,
+        message: "Vui lòng nhập số điện thoại",
+      });
+    }
+
+    // Tìm user theo phương thức được chọn
+    let user;
+    if (method === "email") {
+      user = await User.findOne({ email: email });
+    } else {
+      user = await User.findOne({ phone: phone });
+    }
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: `Không tìm thấy tài khoản với ${
+          method === "email" ? "email" : "số điện thoại"
+        } này`,
+      });
+    }
+
+    // Tạo mã OTP 6 số
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // Lưu OTP vào user (expire sau 10 phút)
+    user.resetPasswordOTP = otp;
+    user.resetPasswordExpires = Date.now() + 10 * 60 * 1000;
+    await user.save();
+
+    // Gửi OTP thật qua email hoặc SMS
+    let sendResult;
+    if (method === "email") {
+      sendResult = await sendOTPEmail(email, otp, user.fullName);
+
+      if (!sendResult.success) {
+        return res.status(500).json({
+          success: false,
+          message: "Không thể gửi email. Vui lòng thử lại sau.",
+        });
+      }
+
+      console.log(`📧 OTP đã gửi qua EMAIL ${email}: ${otp}`);
+    } else {
+      sendResult = await sendOTPSMS(phone, otp);
+
+      if (!sendResult.success) {
+        return res.status(500).json({
+          success: false,
+          message: "Không thể gửi SMS. Vui lòng thử lại sau.",
+        });
+      }
+
+      console.log(`📱 OTP đã gửi qua SMS ${phone}: ${otp}`);
+    }
+
+    res.json({
+      success: true,
+      message: `Mã OTP đã được gửi đến ${
+        method === "email" ? "email" : "số điện thoại"
+      } của bạn`,
+      // BỎ dòng này trong production để bảo mật
+      // otp: otp,
+    });
+  } catch (error) {
+    console.error("❌ Lỗi forgot password:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi server",
+      error: error.message,
+    });
+  }
+});
+
+app.post("/api/auth/reset-password", async (req, res) => {
+  try {
+    const { email, phone, otp, newPassword, method } = req.body;
+
+    if (!otp || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "Vui lòng điền đầy đủ thông tin",
+      });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: "Mật khẩu mới phải có ít nhất 6 ký tự",
+      });
+    }
+
+    // Tìm user theo phương thức và OTP hợp lệ
+    let user;
+    if (method === "email") {
+      user = await User.findOne({
+        email: email,
+        resetPasswordOTP: otp,
+        resetPasswordExpires: { $gt: Date.now() },
+      });
+    } else {
+      user = await User.findOne({
+        phone: phone,
+        resetPasswordOTP: otp,
+        resetPasswordExpires: { $gt: Date.now() },
+      });
+    }
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: "Mã OTP không hợp lệ hoặc đã hết hạn",
+      });
+    }
+
+    // Cập nhật mật khẩu mới
+    user.password = newPassword;
+    user.resetPasswordOTP = undefined;
+    user.resetPasswordExpires = undefined;
+    await user.save();
+
+    // Gửi email/SMS xác nhận
+    if (method === "email") {
+      await sendPasswordResetConfirmation(user.email, user.fullName);
+    } else {
+      await sendPasswordResetSMS(user.phone);
+    }
+
+    res.json({
+      success: true,
+      message:
+        "Đặt lại mật khẩu thành công! Bạn có thể đăng nhập ngay bây giờ.",
+    });
+  } catch (error) {
+    console.error("❌ Lỗi reset password:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi server",
+      error: error.message,
+    });
+  }
+});
+
+// ===================== USER PROFILE APIs =====================
+
+app.get("/api/auth/profile", authenticateToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy người dùng",
+      });
+    }
+
+    res.json({
+      success: true,
+      data: user.toJSON(),
+    });
+  } catch (error) {
+    console.error("❌ Lỗi:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi lấy thông tin người dùng",
+      error: error.message,
+    });
+  }
+});
+
+app.patch("/api/auth/profile", authenticateToken, async (req, res) => {
+  try {
+    const { password, role, isActive, ...updateData } = req.body;
+    if (password) {
+      const bcrypt = await import("bcryptjs");
+      const salt = await bcrypt.genSalt(10);
+      updateData.password = await bcrypt.hash(password, salt);
+    }
+
+    const user = await User.findByIdAndUpdate(req.user.id, updateData, {
+      new: true,
+      runValidators: true,
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy người dùng",
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Cập nhật thông tin thành công!",
+      data: user.toJSON(),
+    });
+  } catch (error) {
+    console.error("❌ Lỗi:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi cập nhật thông tin",
+      error: error.message,
+    });
+  }
+});
+
+// ===================== USER MANAGEMENT APIs (Admin Only) =====================
 
 app.get("/api/users", authenticateToken, requireAdmin, async (req, res) => {
   try {
@@ -843,12 +1071,16 @@ app.listen(PORT, () => {
   console.log(" ================================");
   console.log(` API Base: http://localhost:${PORT}/api`);
   console.log(` Auth: /api/auth/login, /api/auth/register`);
+  console.log(
+    ` Forgot Password: /api/auth/forgot-password, /api/auth/reset-password`
+  );
+  console.log(` Profile: /api/auth/profile`);
   console.log(` Users: /api/users`);
   console.log(` Bookings: /api/bookings`);
   console.log(` Stats: /api/stats`);
-  console.log(`  Products: /api/products`);
+  console.log(` Products: /api/products`);
   console.log(` Equipment: /api/equipment`);
   console.log(` Health: /api/health`);
-  console.log(`Groq API: ${groq ? "Đã kết nối" : " Chưa có key"}`);
+  console.log(`🔐 Groq API: ${groq ? "Đã kết nối" : "Chưa có key"}`);
   console.log(" ================================\n");
 });

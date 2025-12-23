@@ -13,6 +13,7 @@ import BookingForm from "./components/BookingForm.jsx";
 import AdminDashboard from "./pages/AdminDashboard.jsx";
 import BookingSuccessPage from "./pages/BookingSuccessPage.jsx";
 import ProductsPage from "./pages/ProductsPage.jsx";
+import UserProfile from "./pages/UserProfile.jsx";
 import "./index.css";
 
 function App() {
@@ -70,6 +71,15 @@ function App() {
             element={
               <ProtectedRoute requiredRole={["guest", "user"]}>
                 <HomePage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/tai-khoan"
+            element={
+              <ProtectedRoute requiredRole={["user"]}>
+                <UserProfile />
               </ProtectedRoute>
             }
           />

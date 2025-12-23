@@ -53,6 +53,13 @@ const userSchema = new mongoose.Schema(
     lastLogin: {
       type: Date,
     },
+    // Thêm các field cho reset password
+    resetPasswordOTP: {
+      type: String,
+    },
+    resetPasswordExpires: {
+      type: Date,
+    },
   },
   {
     timestamps: true,
@@ -80,6 +87,8 @@ userSchema.methods.comparePassword = async function (candidatePassword) {
 userSchema.methods.toJSON = function () {
   const user = this.toObject();
   delete user.password;
+  delete user.resetPasswordOTP;
+  delete user.resetPasswordExpires;
   return user;
 };
 

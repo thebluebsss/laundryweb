@@ -8,10 +8,16 @@ import {
   Paper,
   AppBar,
 } from "@mui/material";
-import { ShoppingCart, People, Inventory } from "@mui/icons-material";
+import {
+  ShoppingCart,
+  People,
+  Inventory,
+  ShoppingBag,
+} from "@mui/icons-material";
 import OrderManagement from "./OrderManagement";
 import UserManagement from "./UserManagement";
 import EquipmentManagement from "./EquipmentManagement";
+import ProductManagement from "./ProductManagement";
 
 function TabPanel({ children, value, index }) {
   return (
@@ -68,6 +74,11 @@ export default function AdminDashboard() {
               label="Quản lý thiết bị"
               sx={{ fontWeight: "bold", fontSize: "16px" }}
             />
+            <Tab
+              icon={<ShoppingBag />}
+              label="Quản lý sản phẩm"
+              sx={{ fontWeight: "bold", fontSize: "16px" }}
+            />
           </Tabs>
         </AppBar>
 
@@ -81,6 +92,10 @@ export default function AdminDashboard() {
 
         <TabPanel value={currentTab} index={2}>
           <EquipmentManagement />
+        </TabPanel>
+
+        <TabPanel value={currentTab} index={3}>
+          <ProductManagement />
         </TabPanel>
       </Paper>
     </Container>

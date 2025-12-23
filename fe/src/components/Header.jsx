@@ -1,43 +1,93 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { AppBar, Toolbar, Typography, Button, Box } from "@mui/material";
-import LogoutIcon from "@mui/icons-material/Logout";
-import PersonIcon from "@mui/icons-material/Person";
-import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  Button,
+  Box,
+  Avatar,
+  Chip,
+} from "@mui/material";
+import { ExitToApp, Person } from "@mui/icons-material";
 
 export default function Header() {
   const navigate = useNavigate();
   const userRole = localStorage.getItem("userRole");
+  const userName = localStorage.getItem("userName");
 
   const handleLogout = () => {
-    localStorage.removeItem("userRole");
+    localStorage.clear();
     navigate("/");
+    window.location.reload();
   };
 
-  if (!userRole) return null;
+  const handleProfileClick = () => {
+    navigate("/tai-khoan");
+  };
 
   return (
-    <AppBar position="static">
+    <AppBar
+      position="static"
+      sx={{ background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)" }}
+    >
       <Toolbar>
-        <Box sx={{ display: "flex", alignItems: "center", flexGrow: 1 }}>
-          {userRole === "admin" ? (
-            <AdminPanelSettingsIcon sx={{ marginRight: 1 }} />
-          ) : (
-            <PersonIcon sx={{ marginRight: 1 }} />
-          )}
-          <Typography variant="h6">
-            🧺 Hệ Thống Giặt Là Prolaundry -{" "}
-            {userRole === "admin" ? "Quản trị viên" : "Khách hàng"}
-          </Typography>
-        </Box>
-
-        <Button
-          color="inherit"
-          startIcon={<LogoutIcon />}
-          onClick={handleLogout}
+        <Typography
+          variant="h6"
+          component="div"
+          sx={{ flexGrow: 1, fontWeight: "bold", cursor: "pointer" }}
+          onClick={() => navigate(userRole === "admin" ? "/admin" : "/home")}
         >
-          Đăng xuất
-        </Button>
+          🧺 Hệ Thống Giặt Là Prolaundry
+          {userRole === "admin" && " - Quản trị"}
+        </Typography>
+
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+          {(userRole === "guest" || userRole === "user") && (
+            <Chip
+              avatar={
+                <Avatar
+                  sx={{
+                    bgcolor: "rgba(255, 255, 255, 0.3)",
+                    fontSize: 14,
+                  }}
+                >
+                  {userName?.charAt(0)?.toUpperCase() || "U"}
+                </Avatar>
+              }
+              label={userName || "Người dùng"}
+              onClick={handleProfileClick}
+              sx={{
+                backgroundColor: "rgba(255, 255, 255, 0.15)",
+                color: "white",
+                fontWeight: 500,
+                cursor: "pointer",
+                "&:hover": {
+                  backgroundColor: "rgba(255, 255, 255, 0.25)",
+                },
+                "& .MuiChip-label": {
+                  px: 1,
+                },
+              }}
+            />
+          )}
+
+          <Button
+            color="inherit"
+            startIcon={<ExitToApp />}
+            onClick={handleLogout}
+            sx={{
+              borderRadius: 2,
+              textTransform: "none",
+              fontWeight: "bold",
+              "&:hover": {
+                backgroundColor: "rgba(255, 255, 255, 0.1)",
+              },
+            }}
+          >
+            Đăng xuất
+          </Button>
+        </Box>
       </Toolbar>
     </AppBar>
   );
