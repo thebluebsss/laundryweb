@@ -49,7 +49,7 @@ function ProductsPage() {
       }
 
       const response = await fetch(
-        `http://localhost:3001/api/products?${params}`
+        `https://laundryweb-b74z.onrender.com/api/products?${params}`
       );
 
       // Kiểm tra response status

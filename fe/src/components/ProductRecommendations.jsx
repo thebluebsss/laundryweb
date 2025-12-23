@@ -16,7 +16,7 @@ function ProductRecommendations({ bookingId, products }) {
   const fetchRecommendations = async () => {
     try {
       const response = await fetch(
-        `http://localhost:3001/api/recommendations/${bookingId}`
+        `https://laundryweb-b74z.onrender.com/api/recommendations/${bookingId}`
       );
       const data = await response.json();
       if (data.success) {

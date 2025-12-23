@@ -39,7 +39,7 @@ import {
   Cancel,
 } from "@mui/icons-material";
 
-const API_BASE_URL = "http://localhost:3001/api";
+const API_BASE_URL = "https://laundryweb-b74z.onrender.com/api";
 
 export default function OrderManagement() {
   const [orders, setOrders] = useState([]);
