@@ -85,9 +85,7 @@ export default function ProductManagement() {
 
   const fetchProducts = async () => {
     try {
-      const response = await fetch(
-        "https://laundryweb-b74z.onrender.com/api/products"
-      );
+      const response = await fetch("http://localhost:3001/api/products");
       const data = await response.json();
       if (data.success) {
         setProducts(data.data);
@@ -167,8 +165,8 @@ export default function ProductManagement() {
       };
 
       const url = currentProduct
-        ? `https://laundryweb-b74z.onrender.com/api/products/${currentProduct._id}`
-        : "https://laundryweb-b74z.onrender.com/api/products";
+        ? `http://localhost:3001/api/products/${currentProduct._id}`
+        : "http://localhost:3001/api/products";
 
       const method = currentProduct ? "PUT" : "POST";
 
@@ -204,15 +202,12 @@ export default function ProductManagement() {
 
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(
-        `https://laundryweb-b74z.onrender.com/api/products/${id}`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await fetch(`http://localhost:3001/api/products/${id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       const data = await response.json();
 
@@ -234,7 +229,7 @@ export default function ProductManagement() {
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(
-        `https://laundryweb-b74z.onrender.com/api/products/${stockAction.id}/stock`,
+        `http://localhost:3001/api/products/${stockAction.id}/stock`,
         {
           method: "PATCH",
           headers: {

@@ -28,7 +28,7 @@ import PhoneIcon from "@mui/icons-material/Phone";
 import HomeIcon from "@mui/icons-material/Home";
 import "dayjs/locale/vi";
 
-const API_BASE_URL = "https://laundryweb-b74z.onrender.com/api";
+const API_BASE_URL = "http://localhost:3001/api";
 
 export default function BookingForm({ onSuccess }) {
   // Thông tin người dùng từ localStorage
@@ -145,14 +145,11 @@ export default function BookingForm({ onSuccess }) {
     };
 
     try {
-      const response = await fetch(
-        "https://laundryweb-b74z.onrender.com/api/bookings",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(bookingData),
-        }
-      );
+      const response = await fetch("http://localhost:3001/api/bookings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(bookingData),
+      });
 
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || "Lỗi");

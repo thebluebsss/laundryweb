@@ -34189,7 +34189,7 @@ function kw() {
       let t = i;
       a(``), s(!0);
       try {
-        let e = await fetch(`https://laundryweb-b74z.onrender.com/api/chat`, {
+        let e = await fetch(`http://localhost:3001/api/chat`, {
           method: `POST`,
           headers: { "Content-Type": `application/json` },
           body: JSON.stringify({ message: t }),
@@ -34276,7 +34276,7 @@ function kw() {
       });
 }
 var Aw = kw,
-  jw = `https://laundryweb-b74z.onrender.com/api`;
+  jw = `http://localhost:3001/api`;
 function Mw() {
   let e = Re(),
     [t, n] = (0, x.useState)(0),
@@ -44148,7 +44148,7 @@ o((e, t) => {
     return n.default.locale(r, null, !0), r;
   });
 })();
-var Hj = `https://laundryweb-b74z.onrender.com/api`;
+var Hj = `http://localhost:3001/api`;
 function Uj({ onSuccess: e }) {
   let [t, n] = (0, x.useState)({ name: ``, phone: ``, address: `` }),
     [r, i] = (0, x.useState)(`giat-say`),
@@ -44247,14 +44247,11 @@ function Uj({ onSuccess: e }) {
               paymentMethod: y,
             };
             try {
-              let t = await fetch(
-                  `https://laundryweb-b74z.onrender.com/api/bookings`,
-                  {
-                    method: `POST`,
-                    headers: { "Content-Type": `application/json` },
-                    body: JSON.stringify(i),
-                  }
-                ),
+              let t = await fetch(`http://localhost:3001/api/bookings`, {
+                  method: `POST`,
+                  headers: { "Content-Type": `application/json` },
+                  body: JSON.stringify(i),
+                }),
                 n = await t.json();
               if (!t.ok) throw Error(n.message || `Lỗi`);
               e &&
@@ -44536,7 +44533,7 @@ function Uj({ onSuccess: e }) {
         }),
       });
 }
-var Wj = `https://laundryweb-b74z.onrender.com/api`;
+var Wj = `http://localhost:3001/api`;
 function Gj() {
   let [e, t] = (0, x.useState)([]),
     [n, r] = (0, x.useState)([]),
@@ -45180,7 +45177,7 @@ function Gj() {
     ],
   });
 }
-var Kj = `https://laundryweb-b74z.onrender.com/api`;
+var Kj = `http://localhost:3001/api`;
 function qj() {
   let [e, t] = (0, x.useState)([]),
     [n, r] = (0, x.useState)(``),
@@ -46099,7 +46096,7 @@ function qj() {
     ],
   });
 }
-var Jj = `https://laundryweb-b74z.onrender.com/api`;
+var Jj = `http://localhost:3001/api`;
 function Yj() {
   let [e, t] = (0, x.useState)([]),
     [n, r] = (0, x.useState)(!1),
@@ -46889,7 +46886,7 @@ function Qj() {
   let m = async () => {
       try {
         let e = await (
-          await fetch(`https://laundryweb-b74z.onrender.com/api/products`)
+          await fetch(`http://localhost:3001/api/products`)
         ).json();
         e.success && t(e.data);
       } catch {
@@ -46957,8 +46954,8 @@ function Qj() {
               .filter(Boolean),
           },
           n = o
-            ? `https://laundryweb-b74z.onrender.com/api/products/${o._id}`
-            : `https://laundryweb-b74z.onrender.com/api/products`,
+            ? `http://localhost:3001/api/products/${o._id}`
+            : `http://localhost:3001/api/products`,
           r = o ? `PUT` : `POST`,
           i = await (
             await fetch(n, {
@@ -46985,10 +46982,10 @@ function Qj() {
           let t = localStorage.getItem(`token`);
           (
             await (
-              await fetch(
-                `https://laundryweb-b74z.onrender.com/api/products/${e}`,
-                { method: `DELETE`, headers: { Authorization: `Bearer ${t}` } }
-              )
+              await fetch(`http://localhost:3001/api/products/${e}`, {
+                method: `DELETE`,
+                headers: { Authorization: `Bearer ${t}` },
+              })
             ).json()
           ).success && (h(`Xóa sản phẩm thành công`), m());
         } catch {
@@ -47002,20 +46999,17 @@ function Qj() {
       try {
         let e = localStorage.getItem(`token`),
           t = await (
-            await fetch(
-              `https://laundryweb-b74z.onrender.com/api/products/${c.id}/stock`,
-              {
-                method: `PATCH`,
-                headers: {
-                  "Content-Type": `application/json`,
-                  Authorization: `Bearer ${e}`,
-                },
-                body: JSON.stringify({
-                  quantity: Number(c.quantity),
-                  action: c.action,
-                }),
-              }
-            )
+            await fetch(`http://localhost:3001/api/products/${c.id}/stock`, {
+              method: `PATCH`,
+              headers: {
+                "Content-Type": `application/json`,
+                Authorization: `Bearer ${e}`,
+              },
+              body: JSON.stringify({
+                quantity: Number(c.quantity),
+                action: c.action,
+              }),
+            })
           ).json();
         t.success
           ? (h(`Cập nhật tồn kho thành công`), m(), a(!1))
@@ -47556,9 +47550,7 @@ function tM({ bookingId: e, products: t }) {
   let o = async () => {
       try {
         let t = await (
-          await fetch(
-            `https://laundryweb-b74z.onrender.com/api/recommendations/${e}`
-          )
+          await fetch(`http://localhost:3001/api/recommendations/${e}`)
         ).json();
         t.success && r(t.data);
       } catch (e) {
@@ -47888,9 +47880,7 @@ function aM() {
       try {
         let e = new URLSearchParams({ page: u, limit: 12 });
         i !== `all` && e.append(`category`, i), o && e.append(`search`, o);
-        let n = await fetch(
-          `https://laundryweb-b74z.onrender.com/api/products?${e}`
-        );
+        let n = await fetch(`http://localhost:3001/api/products?${e}`);
         if (!n.ok) throw Error(`HTTP error! status: ${n.status}`);
         let a = await n.json();
         console.log(`API Response:`, a),
@@ -48451,7 +48441,7 @@ Chúng tôi sẽ liên hệ với bạn sớm nhất.`));
       });
 }
 var oM = aM,
-  sM = `https://laundryweb-b74z.onrender.com/api`;
+  sM = `http://localhost:3001/api`;
 function cM() {
   let [e, t] = (0, x.useState)(0),
     [n, r] = (0, x.useState)(!0),

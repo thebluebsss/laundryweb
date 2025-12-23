@@ -39,7 +39,7 @@ import {
   Error as ErrorIcon,
 } from "@mui/icons-material";
 
-const API_BASE_URL = "https://laundryweb-b74z.onrender.com/api";
+const API_BASE_URL = "http://localhost:3001/api";
 
 export default function EquipmentManagement() {
   const [equipment, setEquipment] = useState([]);

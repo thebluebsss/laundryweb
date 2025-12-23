@@ -43,7 +43,7 @@ import {
   CheckCircle,
 } from "@mui/icons-material";
 
-const API_BASE_URL = "https://laundryweb-b74z.onrender.com/api";
+const API_BASE_URL = "http://localhost:3001/api";
 
 export default function UserManagement() {
   const [users, setUsers] = useState([]);
