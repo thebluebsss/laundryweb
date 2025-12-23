@@ -15,6 +15,7 @@ import { sendOTPSMS, sendPasswordResetSMS } from "./smsService.js";
 dotenv.config();
 
 const app = express();
+
 app.use(
   cors({
     origin: [
@@ -27,9 +28,10 @@ app.use(
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
+
 app.use(express.json());
 
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-this";
+const JWT_SECRET = process.env.JWT_SECRET;
 
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers["authorization"];
