@@ -4,10 +4,10 @@ on:
   push:
     branches:
       - main
-    # Nếu backend của bạn nằm trong thư mục be/
-    # Bỏ comment dòng dưới nếu muốn chỉ trigger khi có thay đổi trong be/
-    # paths:
-    #   - "be/**"
+      # Nếu backend của bạn nằm trong thư mục be/
+      # Bỏ comment dòng dưới nếu muốn chỉ trigger khi có thay đổi trong be/
+      # paths:
+      - "be/**"
 
 jobs:
   build-and-push:
@@ -35,8 +35,8 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           # Nếu Dockerfile nằm ở root project
-          context: .
-          file: ./Dockerfile
+          context: ./be
+          file: ./be/Dockerfile
 
           # Nếu Dockerfile nằm trong thư mục be/
           # context: ./be
