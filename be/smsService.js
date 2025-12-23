@@ -1,10 +1,10 @@
-import twilio from "twilio";
+// import twilio from "twilio";
 
-// Khởi tạo Twilio client
-const twilioClient = twilio(
-  process.env.TWILIO_ACCOUNT_SID,
-  process.env.TWILIO_AUTH_TOKEN
-);
+// // Khởi tạo Twilio client
+// const twilioClient = twilio(
+//   process.env.TWILIO_ACCOUNT_SID,
+//   process.env.TWILIO_AUTH_TOKEN
+// );
 
 // Gửi OTP qua SMS
 export const sendOTPSMS = async (phone, otp) => {
