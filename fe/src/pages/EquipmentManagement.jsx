@@ -38,8 +38,8 @@ import {
   Warning,
   Error as ErrorIcon,
 } from "@mui/icons-material";
-
-const API_BASE_URL = "http://localhost:3001/api";
+import config from "../config/api";
+const API_BASE_URL = config.API_BASE_URL;
 
 export default function EquipmentManagement() {
   const [equipment, setEquipment] = useState([]);

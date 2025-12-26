@@ -33,8 +33,8 @@ import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import LockResetIcon from "@mui/icons-material/LockReset";
 import EmailIcon from "@mui/icons-material/Email";
 import SmsIcon from "@mui/icons-material/Sms";
-
-const API_BASE_URL = "http://localhost:3001/api";
+import config from "../config/api";
+const API_BASE_URL = config.API_BASE_URL;
 
 export default function LoginPage() {
   const navigate = useNavigate();

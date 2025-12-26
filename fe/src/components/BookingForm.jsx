@@ -26,12 +26,11 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import PersonIcon from "@mui/icons-material/Person";
 import PhoneIcon from "@mui/icons-material/Phone";
 import HomeIcon from "@mui/icons-material/Home";
-import "dayjs/locale/vi";
+import config from "../config/api";
 
-const API_BASE_URL = "http://localhost:3001/api";
+const API_BASE_URL = config.API_BASE_URL;
 
 export default function BookingForm({ onSuccess }) {
-  // Thông tin người dùng từ localStorage
   const [userInfo, setUserInfo] = useState({
     name: "",
     phone: "",
