@@ -28,8 +28,6 @@ import PhoneIcon from "@mui/icons-material/Phone";
 import HomeIcon from "@mui/icons-material/Home";
 import config from "../config/api";
 
-const API_BASE_URL = config.API_BASE_URL;
-
 export default function BookingForm({ onSuccess }) {
   const [userInfo, setUserInfo] = useState({
     name: "",
@@ -93,8 +91,8 @@ export default function BookingForm({ onSuccess }) {
     try {
       const token = localStorage.getItem("token");
 
-      // Sử dụng endpoint /auth/profile thay vì /users/:id
-      const response = await fetch(`${API_BASE_URL}/auth/profile`, {
+      // Sử dụng config.API_BASE_URL
+      const response = await fetch(`${config.API_BASE_URL}/auth/profile`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -144,7 +142,8 @@ export default function BookingForm({ onSuccess }) {
     };
 
     try {
-      const response = await fetch("http://localhost:3001/api/bookings", {
+      // Sử dụng config.API_BASE_URL
+      const response = await fetch(`${config.API_BASE_URL}/bookings`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(bookingData),

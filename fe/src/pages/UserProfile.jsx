@@ -42,7 +42,6 @@ import {
   AccountCircle,
 } from "@mui/icons-material";
 import config from "../config/api";
-const API_BASE_URL = config.API_BASE_URL;
 
 export default function UserProfile() {
   const [currentTab, setCurrentTab] = useState(0);
@@ -94,20 +93,18 @@ export default function UserProfile() {
   const loadUserProfile = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/profile`, {
+      const response = await fetch(`${config.API_BASE_URL}/auth/profile`, {
         headers: {
           Authorization: `Bearer ${getToken()}`,
         },
       });
 
       const data = await response.json();
-      console.log("Profile API Response:", data); // Debug log
+      console.log("Profile API Response:", data);
 
       if (data.success) {
         setUserInfo(data.data);
         setEditData(data.data);
-
-        // Cập nhật localStorage nếu chưa có
         localStorage.setItem("userName", data.data.fullName);
         localStorage.setItem("userPhone", data.data.phone);
         localStorage.setItem("userAddress", data.data.address || "");
@@ -131,7 +128,7 @@ export default function UserProfile() {
     try {
       const userPhone = localStorage.getItem("userPhone");
       const response = await fetch(
-        `${API_BASE_URL}/bookings/phone/${userPhone}`
+        `${config.API_BASE_URL}/bookings/phone/${userPhone}`
       );
 
       const data = await response.json();
@@ -149,7 +146,7 @@ export default function UserProfile() {
   const handleUpdateProfile = async () => {
     setSaving(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/profile`, {
+      const response = await fetch(`${config.API_BASE_URL}/auth/profile`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -169,8 +166,6 @@ export default function UserProfile() {
         setUserInfo(data.data);
         setIsEditing(false);
         showMessage("success", "Cập nhật thông tin thành công!");
-
-        // Cập nhật localStorage
         localStorage.setItem("userName", data.data.fullName);
         localStorage.setItem("userPhone", data.data.phone);
         localStorage.setItem("userAddress", data.data.address);
@@ -198,8 +193,7 @@ export default function UserProfile() {
 
     setSaving(true);
     try {
-      // Verify current password by trying to login
-      const loginResponse = await fetch(`${API_BASE_URL}/auth/login`, {
+      const loginResponse = await fetch(`${config.API_BASE_URL}/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -219,7 +213,7 @@ export default function UserProfile() {
       }
 
       // Update password
-      const response = await fetch(`${API_BASE_URL}/auth/profile`, {
+      const response = await fetch(`${config.API_BASE_URL}/auth/profile`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",

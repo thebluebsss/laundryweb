@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import config from "../config/api";
 
 function ChatWindow({ onClose }) {
   const [messages, setMessages] = useState([]);
@@ -11,14 +12,15 @@ function ChatWindow({ onClose }) {
 
     const userMessage = { type: "user", text: input };
     setMessages((prev) => [...prev, userMessage]);
+    const currentInput = input;
     setInput("");
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/chat", {
+      const response = await fetch(`${config.API_BASE_URL}/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: input }),
+        body: JSON.stringify({ message: currentInput }),
       });
 
       if (!response.ok) {
@@ -40,9 +42,8 @@ function ChatWindow({ onClose }) {
 
   return (
     <div className="chat-window">
-      {" "}
       <div className="chat-header">
-        <h4>Chat với AI</h4>
+        <h4>Chat với AI</h4>
         <button onClick={onClose}>&times;</button>
       </div>
       <div className="chat-messages">

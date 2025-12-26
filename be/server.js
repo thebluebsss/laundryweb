@@ -187,7 +187,76 @@ app.post("/api/auth/login", async (req, res) => {
     });
   }
 });
+// ===================== GET USER PROFILE =====================
+app.get("/api/auth/profile", authenticateToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
 
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy người dùng",
+      });
+    }
+
+    res.json({
+      success: true,
+      data: user.toJSON(),
+    });
+  } catch (error) {
+    console.error("❌ Lỗi lấy profile:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi lấy thông tin người dùng",
+      error: error.message,
+    });
+  }
+});
+
+// ===================== UPDATE USER PROFILE =====================
+app.patch("/api/auth/profile", authenticateToken, async (req, res) => {
+  try {
+    const { fullName, phone, address, email, password } = req.body;
+
+    const updateData = {};
+    if (fullName) updateData.fullName = fullName;
+    if (phone) updateData.phone = phone;
+    if (address !== undefined) updateData.address = address;
+    if (email) updateData.email = email;
+
+    // Nếu có password mới, hash nó
+    if (password) {
+      const bcrypt = await import("bcryptjs");
+      const salt = await bcrypt.genSalt(10);
+      updateData.password = await bcrypt.hash(password, salt);
+    }
+
+    const user = await User.findByIdAndUpdate(req.user.id, updateData, {
+      new: true,
+      runValidators: true,
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy người dùng",
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Cập nhật thông tin thành công!",
+      data: user.toJSON(),
+    });
+  } catch (error) {
+    console.error("❌ Lỗi cập nhật profile:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi cập nhật thông tin",
+      error: error.message,
+    });
+  }
+});
 // ===================== USER MANAGEMENT APIs =====================
 
 app.get("/api/users", authenticateToken, requireAdmin, async (req, res) => {
