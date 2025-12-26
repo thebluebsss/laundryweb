@@ -736,7 +736,7 @@ app.post("/api/chat", async (req, res) => {
       return res.json({
         success: true,
         reply:
-          "Xin lỗi, chatbot chưa được cấu hình.
+          "Xin lỗi, chatbot chưa được cấu hình. Vui lòng thêm GROQ_API_KEY vào file .env",
       });
     }
 
@@ -746,8 +746,8 @@ app.post("/api/chat", async (req, res) => {
         {
           role: "system",
           content: `Bạn là trợ lý ảo thân thiện của dịch vụ giặt là. Nhiệm vụ của bạn là:
-          - Bạn tên là Cấp.
-          - Nếu người dùng hỏi muốn dùng chức nằng nào đó hãy sinh ra link phù hợp với chức năng đó trên website của chúng tôi.
+          - Tên của bạn là Cấp.
+          - Nếu người dùng có hỏi về muốn sử dụng chức năng nào đó hãy sinh ra link tới trang tương ứng trên website của chúng tôi.
 - Tư vấn về các dịch vụ giặt là (giặt sấy, giặt khô, giặt ủi)
 - Hướng dẫn cách đặt lịch
 - Giải đáp thắc mắc về giá cả, thời gian
