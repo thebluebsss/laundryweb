@@ -719,7 +719,67 @@ app.get("/api/stats", async (req, res) => {
     });
   }
 });
+// ===================== CHAT API =====================
+app.post("/api/chat", async (req, res) => {
+  try {
+    const { message } = req.body;
 
+    if (!message) {
+      return res.status(400).json({
+        success: false,
+        message: "Vui lòng nhập tin nhắn",
+      });
+    }
+
+    // Kiểm tra xem có Groq API key không
+    if (!groq) {
+      return res.json({
+        success: true,
+        reply:
+          "Xin lỗi, chatbot chưa được cấu hình. Vui lòng thêm GROQ_API_KEY vào file .env",
+      });
+    }
+
+    // Gọi Groq API
+    const completion = await groq.chat.completions.create({
+      messages: [
+        {
+          role: "system",
+          content: `Bạn là trợ lý ảo thân thiện của dịch vụ giặt là. Nhiệm vụ của bạn là:
+- Tư vấn về các dịch vụ giặt là (giặt sấy, giặt khô, giặt ủi)
+- Hướng dẫn cách đặt lịch
+- Giải đáp thắc mắc về giá cả, thời gian
+- Tư vấn về sản phẩm giặt là
+Hãy trả lời ngắn gọn, thân thiện và hữu ích bằng tiếng Việt.`,
+        },
+        {
+          role: "user",
+          content: message,
+        },
+      ],
+      model: "llama-3.3-70b-versatile",
+      temperature: 0.7,
+      max_tokens: 500,
+    });
+
+    const reply =
+      completion.choices[0]?.message?.content ||
+      "Xin lỗi, tôi không hiểu câu hỏi của bạn.";
+
+    res.json({
+      success: true,
+      reply: reply,
+    });
+  } catch (error) {
+    console.error("❌ Lỗi chat:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi xử lý tin nhắn",
+      reply: "Xin lỗi, đã có lỗi xảy ra. Vui lòng thử lại sau.",
+      error: error.message,
+    });
+  }
+});
 // ===================== EQUIPMENT APIs =====================
 
 app.get("/api/equipment", authenticateToken, requireAdmin, async (req, res) => {
