@@ -736,7 +736,7 @@ app.post("/api/chat", async (req, res) => {
       return res.json({
         success: true,
         reply:
-          "Xin lỗi, chatbot chưa được cấu hình. Vui lòng thêm GROQ_API_KEY vào file .env",
+          "Xin lỗi, chatbot chưa được cấu hình.
       });
     }
 
@@ -746,6 +746,8 @@ app.post("/api/chat", async (req, res) => {
         {
           role: "system",
           content: `Bạn là trợ lý ảo thân thiện của dịch vụ giặt là. Nhiệm vụ của bạn là:
+          - Bạn tên là Cấp.
+          - Nếu người dùng hỏi muốn dùng chức nằng nào đó hãy sinh ra link phù hợp với chức năng đó trên website của chúng tôi.
 - Tư vấn về các dịch vụ giặt là (giặt sấy, giặt khô, giặt ủi)
 - Hướng dẫn cách đặt lịch
 - Giải đáp thắc mắc về giá cả, thời gian
@@ -966,18 +968,4 @@ app.use((req, res) => {
 });
 
 const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => {
-  console.log("\n ================================");
-  console.log(`   Server đang chạy tại: http://localhost:${PORT}`);
-  console.log(" ================================");
-  console.log(` API Base: http://localhost:${PORT}/api`);
-  console.log(` Auth: /api/auth/login, /api/auth/register`);
-  console.log(` Users: /api/users`);
-  console.log(` Bookings: /api/bookings`);
-  console.log(` Stats: /api/stats`);
-  console.log(`  Products: /api/products`);
-  console.log(` Equipment: /api/equipment`);
-  console.log(` Health: /api/health`);
-  console.log(`Groq API: ${groq ? "Đã kết nối" : " Chưa có key"}`);
-  console.log(" ================================\n");
-});
+app.listen(PORT, () => {});
