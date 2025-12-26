@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from "react";
 import "./ProductsPage.css";
+import config from "../config/api";
+
+const API_BASE_URL = config.API_BASE_URL;
 
 function ProductsPage() {
   const [products, setProducts] = useState([]);
@@ -48,17 +51,14 @@ function ProductsPage() {
         params.append("search", searchTerm);
       }
 
-      const response = await fetch(
-        `http://localhost:3001/api/products?${params}`
-      );
+      const response = await fetch(`${API_BASE_URL}/products?${params}`);
 
-      // Kiểm tra response status
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
-      console.log("API Response:", data); // Debug log
+      console.log("API Response:", data);
 
       if (data.success && data.data) {
         setProducts(data.data);
@@ -141,32 +141,14 @@ function ProductsPage() {
       return;
     }
 
-    const orderData = {
-      items: cart.map((item) => ({
-        productId: item._id,
-        name: item.name,
-        price: item.price,
-        quantity: item.quantity,
-        total: item.price * item.quantity,
-      })),
-      totalAmount: getTotalPrice(),
-      totalItems: getTotalItems(),
-      orderDate: new Date().toISOString(),
-    };
-
-    // console.log("Order data:", orderData);
-
-    // // TODO: Send to backend API for payment processing
-    // // For now, show confirmation
-    // const confirmOrder = window.confirm(
-    //   `Xác nhận thanh toán?\n\n` +
-    //     `Tổng số sản phẩm: ${getTotalItems()}\n` +
-    //     `Tổng tiền: ${formatPrice(getTotalPrice())}\n\n` +
-    //     `Bạn có muốn tiếp tục?`
-    // );
+    const confirmOrder = window.confirm(
+      `Xác nhận thanh toán?\n\n` +
+        `Tổng số sản phẩm: ${getTotalItems()}\n` +
+        `Tổng tiền: ${formatPrice(getTotalPrice())}\n\n` +
+        `Bạn có muốn tiếp tục?`
+    );
 
     if (confirmOrder) {
-      // Clear cart after successful order
       setCart([]);
       setShowCartModal(false);
       alert(
@@ -387,7 +369,6 @@ function ProductsPage() {
               }`}
               onClick={() => handleCategoryChange(cat.value)}
             >
-              <span>{cat.icon}</span>
               <span>{cat.label}</span>
             </button>
           ))}

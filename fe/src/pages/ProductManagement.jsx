@@ -32,6 +32,9 @@ import {
   RemoveCircle,
   AddCircle,
 } from "@mui/icons-material";
+import config from "../config/api";
+
+const API_BASE_URL = config.API_BASE_URL;
 
 const categories = [
   { value: "detergent", label: "Bột/Nước giặt" },
@@ -85,7 +88,7 @@ export default function ProductManagement() {
 
   const fetchProducts = async () => {
     try {
-      const response = await fetch("http://localhost:3001/api/products");
+      const response = await fetch(`${API_BASE_URL}/products`);
       const data = await response.json();
       if (data.success) {
         setProducts(data.data);
@@ -165,8 +168,8 @@ export default function ProductManagement() {
       };
 
       const url = currentProduct
-        ? `http://localhost:3001/api/products/${currentProduct._id}`
-        : "http://localhost:3001/api/products";
+        ? `${API_BASE_URL}/products/${currentProduct._id}`
+        : `${API_BASE_URL}/products`;
 
       const method = currentProduct ? "PUT" : "POST";
 
@@ -202,7 +205,7 @@ export default function ProductManagement() {
 
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`http://localhost:3001/api/products/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/products/${id}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -229,7 +232,7 @@ export default function ProductManagement() {
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(
-        `http://localhost:3001/api/products/${stockAction.id}/stock`,
+        `${API_BASE_URL}/products/${stockAction.id}/stock`,
         {
           method: "PATCH",
           headers: {
