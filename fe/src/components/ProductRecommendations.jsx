@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from "react";
 import "./ProductRecommendations.css";
+import config from "../config/api";
+
+const API_BASE_URL = config.API_BASE_URL;
 
 function ProductRecommendations({ bookingId, products }) {
   const [recommendedProducts, setRecommendedProducts] = useState(
@@ -16,7 +19,7 @@ function ProductRecommendations({ bookingId, products }) {
   const fetchRecommendations = async () => {
     try {
       const response = await fetch(
-        `http://localhost:3001/api/recommendations/${bookingId}`
+        `${API_BASE_URL}/recommendations/${bookingId}`
       );
       const data = await response.json();
       if (data.success) {
@@ -74,11 +77,11 @@ function ProductRecommendations({ bookingId, products }) {
                   <img src={product.image} alt={product.name} />
                 ) : (
                   <div className="placeholder-image">
-                    {product.category === "detergent"}
-                    {product.category === "softener"}
-                    {product.category === "bleach"}
-                    {product.category === "bag"}
-                    {product.category === "accessory"}
+                    {product.category === "detergent" && "🧴"}
+                    {product.category === "softener" && "💧"}
+                    {product.category === "bleach" && "🧪"}
+                    {product.category === "bag" && "👜"}
+                    {product.category === "accessory" && "🔧"}
                   </div>
                 )}
               </div>
