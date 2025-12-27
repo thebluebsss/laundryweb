@@ -8,6 +8,8 @@ import Booking from "./Booking.js";
 import Product from "./Product.js";
 import User from "./User.js";
 import Equipment from "./Equipment.js";
+import crypto from "crypto";
+import { sendOTPEmail, sendPasswordResetConfirmation } from "./emailService.js";
 
 dotenv.config();
 
@@ -517,7 +519,164 @@ app.get(
     }
   }
 );
+const otpStore = new Map();
 
+// ===================== FORGOT PASSWORD =====================
+app.post("/api/auth/forgot-password", async (req, res) => {
+  try {
+    const { email, phone, method } = req.body;
+
+    let user;
+    if (method === "email") {
+      if (!email) {
+        return res.status(400).json({
+          success: false,
+          message: "Vui lòng nhập email",
+        });
+      }
+      user = await User.findOne({ email });
+    } else {
+      if (!phone) {
+        return res.status(400).json({
+          success: false,
+          message: "Vui lòng nhập số điện thoại",
+        });
+      }
+      user = await User.findOne({ phone });
+    }
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy tài khoản với thông tin này",
+      });
+    }
+
+    // Tạo mã OTP 6 số
+    const otp = crypto.randomInt(100000, 999999).toString();
+
+    // Lưu OTP với thời gian hết hạn 10 phút
+    const otpKey = method === "email" ? email : phone;
+    otpStore.set(otpKey, {
+      otp,
+      userId: user._id,
+      expiresAt: Date.now() + 10 * 60 * 1000, // 10 phút
+    });
+
+    // Gửi OTP
+    if (method === "email") {
+      const emailResult = await sendOTPEmail(email, otp, user.fullName);
+      if (!emailResult.success) {
+        return res.status(500).json({
+          success: false,
+          message: "Lỗi khi gửi email. Vui lòng thử lại.",
+        });
+      }
+    } else {
+      // TODO: Implement SMS sending
+      console.log(`📱 OTP for ${phone}: ${otp}`);
+    }
+
+    res.json({
+      success: true,
+      message: `Mã OTP đã được gửi đến ${
+        method === "email" ? "email" : "số điện thoại"
+      } của bạn`,
+    });
+  } catch (error) {
+    console.error("❌ Lỗi forgot password:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi server khi xử lý yêu cầu",
+      error: error.message,
+    });
+  }
+});
+
+// ===================== RESET PASSWORD =====================
+app.post("/api/auth/reset-password", async (req, res) => {
+  try {
+    const { email, phone, otp, newPassword, method } = req.body;
+
+    if (!otp || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "Vui lòng nhập đầy đủ thông tin",
+      });
+    }
+
+    // Lấy thông tin OTP từ store
+    const otpKey = method === "email" ? email : phone;
+    const otpData = otpStore.get(otpKey);
+
+    if (!otpData) {
+      return res.status(400).json({
+        success: false,
+        message: "Mã OTP không tồn tại hoặc đã hết hạn",
+      });
+    }
+
+    // Kiểm tra OTP có đúng không
+    if (otpData.otp !== otp) {
+      return res.status(400).json({
+        success: false,
+        message: "Mã OTP không đúng",
+      });
+    }
+
+    // Kiểm tra OTP có hết hạn chưa
+    if (Date.now() > otpData.expiresAt) {
+      otpStore.delete(otpKey);
+      return res.status(400).json({
+        success: false,
+        message: "Mã OTP đã hết hạn",
+      });
+    }
+
+    // Cập nhật mật khẩu mới
+    const user = await User.findById(otpData.userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy người dùng",
+      });
+    }
+
+    user.password = newPassword;
+    await user.save();
+
+    // Xóa OTP khỏi store
+    otpStore.delete(otpKey);
+
+    // Gửi email xác nhận (nếu là email)
+    if (method === "email") {
+      await sendPasswordResetConfirmation(email, user.fullName);
+    }
+
+    res.json({
+      success: true,
+      message: "Đặt lại mật khẩu thành công! Vui lòng đăng nhập.",
+    });
+  } catch (error) {
+    console.error("❌ Lỗi reset password:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi server khi đặt lại mật khẩu",
+      error: error.message,
+    });
+  }
+});
+
+// Tự động xóa OTP hết hạn mỗi 15 phút
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, value] of otpStore.entries()) {
+    if (now > value.expiresAt) {
+      otpStore.delete(key);
+      console.log(`🗑️ Đã xóa OTP hết hạn: ${key}`);
+    }
+  }
+}, 15 * 60 * 1000);
 // ===================== BOOKING APIs =====================
 
 app.get("/api/bookings", async (req, res) => {

@@ -47,10 +47,10 @@ export const sendPasswordResetSMS = async (phone) => {
       to: formattedPhone,
     });
 
-    console.log("✅ SMS xác nhận đã gửi:", message.sid);
+    console.log(" SMS xác nhận đã gửi:", message.sid);
     return { success: true, messageSid: message.sid };
   } catch (error) {
-    console.error("❌ Lỗi gửi SMS xác nhận:", error);
+    console.error(" Lỗi gửi SMS xác nhận:", error);
     return { success: false, error: error.message };
   }
 };

@@ -1,13 +1,5 @@
 import React, { useState } from "react";
-import {
-  Container,
-  Box,
-  Tabs,
-  Tab,
-  Typography,
-  Paper,
-  AppBar,
-} from "@mui/material";
+import { Container, Box, Tabs, Tab, Typography, Paper } from "@mui/material";
 import {
   ShoppingCart,
   People,
@@ -21,7 +13,7 @@ import ProductManagement from "./ProductManagement";
 
 function TabPanel({ children, value, index }) {
   return (
-    <div hidden={value !== index} style={{ paddingTop: "24px" }}>
+    <div hidden={value !== index} style={{ paddingTop: "32px" }}>
       {value === index && <Box>{children}</Box>}
     </div>
   );
@@ -35,69 +27,119 @@ export default function AdminDashboard() {
   };
 
   return (
-    <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
-      <Box sx={{ mb: 3 }}>
-        <Typography variant="h3" gutterBottom sx={{ fontWeight: "bold" }}>
-          🎛️ Quản Trị Hệ Thống
-        </Typography>
-        <Typography variant="subtitle1" color="textSecondary">
-          Chào mừng bạn đến với trang quản trị ProLaundry
-        </Typography>
-      </Box>
-
-      <Paper elevation={3}>
-        <AppBar
-          position="static"
-          color="default"
-          sx={{ borderRadius: "8px 8px 0 0" }}
-        >
-          <Tabs
-            value={currentTab}
-            onChange={handleTabChange}
-            indicatorColor="primary"
-            textColor="primary"
-            variant="fullWidth"
-            sx={{ backgroundColor: "white" }}
+    <Box
+      sx={{
+        minHeight: "100vh",
+        background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+        py: 4,
+      }}
+    >
+      <Container maxWidth="xl">
+        {/* Header Section */}
+        <Box sx={{ mb: 4 }}>
+          <Typography
+            variant="h3"
+            gutterBottom
+            sx={{
+              fontWeight: 800,
+              color: "white",
+              textShadow: "0 2px 10px rgba(0,0,0,0.2)",
+            }}
           >
-            <Tab
-              icon={<ShoppingCart />}
-              label="Quản lý đơn hàng"
-              sx={{ fontWeight: "bold", fontSize: "16px" }}
-            />
-            <Tab
-              icon={<People />}
-              label="Quản lý người dùng"
-              sx={{ fontWeight: "bold", fontSize: "16px" }}
-            />
-            <Tab
-              icon={<Inventory />}
-              label="Quản lý thiết bị"
-              sx={{ fontWeight: "bold", fontSize: "16px" }}
-            />
-            <Tab
-              icon={<ShoppingBag />}
-              label="Quản lý sản phẩm"
-              sx={{ fontWeight: "bold", fontSize: "16px" }}
-            />
-          </Tabs>
-        </AppBar>
+            🎛️ Quản Trị Hệ Thống
+          </Typography>
+          <Typography
+            variant="subtitle1"
+            sx={{
+              color: "rgba(255,255,255,0.9)",
+              fontSize: "18px",
+            }}
+          ></Typography>
+        </Box>
 
-        <TabPanel value={currentTab} index={0}>
-          <OrderManagement />
-        </TabPanel>
+        {/* Main Content */}
+        <Paper
+          elevation={8}
+          sx={{
+            borderRadius: "20px",
+            overflow: "hidden",
+            background: "white",
+          }}
+        >
+          <Box
+            sx={{
+              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+              py: 2,
+            }}
+          >
+            <Tabs
+              value={currentTab}
+              onChange={handleTabChange}
+              indicatorColor="secondary"
+              textColor="inherit"
+              variant="fullWidth"
+              sx={{
+                "& .MuiTab-root": {
+                  color: "rgba(255,255,255,0.7)",
+                  fontWeight: 600,
+                  fontSize: "15px",
+                  textTransform: "none",
+                  minHeight: "72px",
+                  transition: "all 0.3s ease",
+                  "&:hover": {
+                    color: "white",
+                    background: "rgba(255,255,255,0.1)",
+                  },
+                  "&.Mui-selected": {
+                    color: "white",
+                    fontWeight: 700,
+                  },
+                },
+                "& .MuiTabs-indicator": {
+                  height: 4,
+                  borderRadius: "4px 4px 0 0",
+                  backgroundColor: "white",
+                },
+              }}
+            >
+              <Tab
+                icon={<ShoppingCart sx={{ fontSize: 28, mb: 0.5 }} />}
+                label="Quản lý Đơn hàng"
+              />
+              <Tab
+                icon={<People sx={{ fontSize: 28, mb: 0.5 }} />}
+                label="Quản lý Người dùng"
+              />
+              <Tab
+                icon={<Inventory sx={{ fontSize: 28, mb: 0.5 }} />}
+                label="Quản lý Thiết bị"
+              />
+              <Tab
+                icon={<ShoppingBag sx={{ fontSize: 28, mb: 0.5 }} />}
+                label="Quản lý Sản phẩm"
+              />
+            </Tabs>
+          </Box>
 
-        <TabPanel value={currentTab} index={1}>
-          <UserManagement />
-        </TabPanel>
+          <Box sx={{ p: 3 }}>
+            <TabPanel value={currentTab} index={0}>
+              <OrderManagement />
+            </TabPanel>
 
-        <TabPanel value={currentTab} index={2}>
-          <EquipmentManagement />
-        </TabPanel>
+            <TabPanel value={currentTab} index={1}>
+              <UserManagement />
+            </TabPanel>
 
-        <TabPanel value={currentTab} index={3}>
-          <ProductManagement />
-        </TabPanel>
-      </Paper>
-    </Container>
+            <TabPanel value={currentTab} index={2}>
+              <EquipmentManagement />
+            </TabPanel>
+
+            <TabPanel value={currentTab} index={3}>
+              <ProductManagement />
+            </TabPanel>
+          </Box>
+        </Paper>
+      </Container>
+    </Box>
   );
 }

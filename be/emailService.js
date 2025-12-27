@@ -1,12 +1,10 @@
 import nodemailer from "nodemailer";
-
-// Cấu hình email transporter
 const createTransporter = () => {
   return nodemailer.createTransport({
     service: "gmail",
     auth: {
-      user: process.env.EMAIL_USER, // Email của bạn
-      pass: process.env.EMAIL_PASSWORD, // App Password của Gmail
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASSWORD,
     },
   });
 };
@@ -138,15 +136,14 @@ export const sendOTPEmail = async (email, otp, userName = "Khách hàng") => {
     };
 
     const info = await transporter.sendMail(mailOptions);
-    console.log("✅ Email đã gửi thành công:", info.messageId);
+    console.log(" Email đã gửi thành công:", info.messageId);
     return { success: true, messageId: info.messageId };
   } catch (error) {
-    console.error("❌ Lỗi gửi email:", error);
+    console.error(" Lỗi gửi email:", error);
     return { success: false, error: error.message };
   }
 };
 
-// Gửi email xác nhận đặt lại mật khẩu thành công
 export const sendPasswordResetConfirmation = async (email, userName) => {
   try {
     const transporter = createTransporter();
@@ -216,10 +213,10 @@ export const sendPasswordResetConfirmation = async (email, userName) => {
     };
 
     await transporter.sendMail(mailOptions);
-    console.log("✅ Email xác nhận đã gửi thành công");
+    console.log(" Email xác nhận đã gửi thành công");
     return { success: true };
   } catch (error) {
-    console.error("❌ Lỗi gửi email xác nhận:", error);
+    console.error(" Lỗi gửi email xác nhận:", error);
     return { success: false, error: error.message };
   }
 };
