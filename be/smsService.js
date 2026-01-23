@@ -9,7 +9,6 @@
 // Gửi OTP qua SMS
 export const sendOTPSMS = async (phone, otp) => {
   try {
-    // Định dạng số điện thoại theo chuẩn quốc tế (+84...)
     let formattedPhone = phone;
     if (phone.startsWith("0")) {
       formattedPhone = "+84" + phone.substring(1);

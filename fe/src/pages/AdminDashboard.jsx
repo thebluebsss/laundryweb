@@ -5,8 +5,10 @@ import {
   People,
   Inventory,
   ShoppingBag,
+  LocalMall,
 } from "@mui/icons-material";
 import OrderManagement from "./OrderManagement";
+import ProductOrderManagement from "./ProductOrderManagement";
 import UserManagement from "./UserManagement";
 import EquipmentManagement from "./EquipmentManagement";
 import ProductManagement from "./ProductManagement";
@@ -46,7 +48,7 @@ export default function AdminDashboard() {
               textShadow: "0 2px 10px rgba(0,0,0,0.2)",
             }}
           >
-            🎛️ Quản Trị Hệ Thống
+            🎛️ Quản trị hệ thống
           </Typography>
           <Typography
             variant="subtitle1"
@@ -104,19 +106,23 @@ export default function AdminDashboard() {
             >
               <Tab
                 icon={<ShoppingCart sx={{ fontSize: 28, mb: 0.5 }} />}
-                label="Quản lý Đơn hàng"
+                label="Đơn dịch vụ"
+              />
+              <Tab
+                icon={<LocalMall sx={{ fontSize: 28, mb: 0.5 }} />}
+                label="Đơn sản phẩm"
               />
               <Tab
                 icon={<People sx={{ fontSize: 28, mb: 0.5 }} />}
-                label="Quản lý Người dùng"
+                label="Người dùng"
               />
               <Tab
                 icon={<Inventory sx={{ fontSize: 28, mb: 0.5 }} />}
-                label="Quản lý Thiết bị"
+                label="Thiết bị"
               />
               <Tab
                 icon={<ShoppingBag sx={{ fontSize: 28, mb: 0.5 }} />}
-                label="Quản lý Sản phẩm"
+                label="Sản phẩm"
               />
             </Tabs>
           </Box>
@@ -127,14 +133,18 @@ export default function AdminDashboard() {
             </TabPanel>
 
             <TabPanel value={currentTab} index={1}>
-              <UserManagement />
+              <ProductOrderManagement />
             </TabPanel>
 
             <TabPanel value={currentTab} index={2}>
-              <EquipmentManagement />
+              <UserManagement />
             </TabPanel>
 
             <TabPanel value={currentTab} index={3}>
+              <EquipmentManagement />
+            </TabPanel>
+
+            <TabPanel value={currentTab} index={4}>
               <ProductManagement />
             </TabPanel>
           </Box>

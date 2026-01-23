@@ -127,7 +127,7 @@ export const sendOTPEmail = async (email, otp, userName = "Khách hàng") => {
             <div class="footer">
               <p>Email này được gửi tự động, vui lòng không trả lời.</p>
               <p>© 2025 Prolaundry. All rights reserved.</p>
-              <p>Hotline: 1900-xxxx | Email: support@prolaundry.com</p>
+              <p>Hotline: 0969263238 thebluebsss@gmail.com</p>
             </div>
           </div>
         </body>
@@ -200,7 +200,7 @@ export const sendPasswordResetConfirmation = async (email, userName) => {
               <h2 style="text-align: center; color: #4caf50;">Đặt Lại Mật Khẩu Thành Công!</h2>
               <p>Xin chào ${userName},</p>
               <p>Mật khẩu của bạn đã được đặt lại thành công vào lúc ${new Date().toLocaleString(
-                "vi-VN"
+                "vi-VN",
               )}.</p>
               <p>Bạn có thể đăng nhập ngay bây giờ với mật khẩu mới.</p>
               <p><strong>Nếu bạn không thực hiện thay đổi này, vui lòng liên hệ với chúng tôi ngay lập tức!</strong></p>

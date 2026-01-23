@@ -53,7 +53,6 @@ const userSchema = new mongoose.Schema(
     lastLogin: {
       type: Date,
     },
-    // Thêm các field cho reset password
     resetPasswordOTP: {
       type: String,
     },
@@ -63,7 +62,7 @@ const userSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 userSchema.pre("save", async function (next) {

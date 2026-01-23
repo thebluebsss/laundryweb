@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import "./ProductsPage.css";
 import config from "../config/api";
+import { useCart } from "../contexts/CartContext";
+import ProductPaymentProcessor from "../components/ProductPaymentProcessor";
 
 const API_BASE_URL = config.API_BASE_URL;
 
@@ -12,11 +14,19 @@ function ProductsPage() {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [cart, setCart] = useState(() => {
-    const savedCart = localStorage.getItem("laundry_cart");
-    return savedCart ? JSON.parse(savedCart) : [];
-  });
   const [showCartModal, setShowCartModal] = useState(false);
+  const [showPaymentProcessor, setShowPaymentProcessor] = useState(false);
+
+  // Sử dụng CartContext thay vì local state
+  const {
+    items: cart,
+    addItem,
+    removeItem,
+    updateQuantity,
+    clearCart,
+    getTotalPrice,
+    getTotalItems,
+  } = useCart();
 
   const categories = [
     { value: "all", label: "Tất cả" },
@@ -30,10 +40,6 @@ function ProductsPage() {
   useEffect(() => {
     fetchProducts();
   }, [selectedCategory, searchTerm, currentPage]);
-
-  useEffect(() => {
-    localStorage.setItem("laundry_cart", JSON.stringify(cart));
-  }, [cart]);
 
   const fetchProducts = async () => {
     setLoading(true);
@@ -72,7 +78,7 @@ function ProductsPage() {
     } catch (error) {
       console.error("Lỗi tải sản phẩm:", error);
       alert(
-        "Không thể tải sản phẩm. Vui lòng kiểm tra:\n1. Server đang chạy (port 3001)\n2. Đã chạy seedProduct.js\n3. MongoDB đã kết nối"
+        "Không thể tải sản phẩm. Vui lòng kiểm tra:\n1. Server đang chạy (port 3001)\n2. Đã chạy seedProduct.js\n3. MongoDB đã kết nối",
       );
     } finally {
       setLoading(false);
@@ -92,47 +98,21 @@ function ProductsPage() {
   };
 
   const addToCart = (product) => {
-    const existingItem = cart.find((item) => item._id === product._id);
-
-    if (existingItem) {
-      setCart(
-        cart.map((item) =>
-          item._id === product._id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        )
-      );
-    } else {
-      setCart([...cart, { ...product, quantity: 1 }]);
-    }
-
+    addItem(product);
     showNotification(`Đã thêm "${product.name}" vào giỏ hàng!`);
   };
 
   const removeFromCart = (productId) => {
-    setCart(cart.filter((item) => item._id !== productId));
+    removeItem(productId);
     showNotification("Đã xóa sản phẩm khỏi giỏ hàng!");
   };
 
-  const updateQuantity = (productId, newQuantity) => {
+  const updateCartQuantity = (productId, newQuantity) => {
     if (newQuantity < 1) {
       removeFromCart(productId);
       return;
     }
-
-    setCart(
-      cart.map((item) =>
-        item._id === productId ? { ...item, quantity: newQuantity } : item
-      )
-    );
-  };
-
-  const getTotalPrice = () => {
-    return cart.reduce((total, item) => total + item.price * item.quantity, 0);
-  };
-
-  const getTotalItems = () => {
-    return cart.reduce((total, item) => total + item.quantity, 0);
+    updateQuantity(productId, newQuantity);
   };
 
   const handleCheckout = () => {
@@ -141,20 +121,27 @@ function ProductsPage() {
       return;
     }
 
-    const confirmOrder = window.confirm(
-      `Xác nhận thanh toán?\n\n` +
-        `Tổng số sản phẩm: ${getTotalItems()}\n` +
-        `Tổng tiền: ${formatPrice(getTotalPrice())}\n\n` +
-        `Bạn có muốn tiếp tục?`
-    );
-
-    if (confirmOrder) {
-      setCart([]);
-      setShowCartModal(false);
-      alert(
-        "✅ Đặt hàng thành công!\n\nChúng tôi sẽ liên hệ với bạn sớm nhất."
+    // Kiểm tra đăng nhập
+    const token = localStorage.getItem("token");
+    if (!token) {
+      const shouldLogin = window.confirm(
+        "Bạn cần đăng nhập để thực hiện thanh toán.\n\nBạn có muốn đăng nhập ngay không?",
       );
+      if (shouldLogin) {
+        window.location.href = "/login";
+      }
+      return;
     }
+
+    // Mở ProductPaymentProcessor
+    setShowCartModal(false);
+    setShowPaymentProcessor(true);
+  };
+
+  const handlePaymentSuccess = () => {
+    clearCart();
+    setShowPaymentProcessor(false);
+    showNotification("🎉 Đặt hàng thành công! Cảm ơn bạn đã mua sắm.");
   };
 
   const showNotification = (message) => {
@@ -278,7 +265,7 @@ function ProductsPage() {
                             <button
                               className="qty-btn"
                               onClick={() =>
-                                updateQuantity(item._id, item.quantity - 1)
+                                updateCartQuantity(item._id, item.quantity - 1)
                               }
                             >
                               −
@@ -287,7 +274,7 @@ function ProductsPage() {
                             <button
                               className="qty-btn"
                               onClick={() =>
-                                updateQuantity(item._id, item.quantity + 1)
+                                updateCartQuantity(item._id, item.quantity + 1)
                               }
                             >
                               +
@@ -395,7 +382,7 @@ function ProductsPage() {
             {filteredProducts.map((product) => {
               const discount = calculateDiscount(
                 product.originalPrice,
-                product.price
+                product.price,
               );
 
               return (
@@ -541,6 +528,17 @@ function ProductsPage() {
           Đặt lịch giặt ủi ngay
         </button>
       </div>
+
+      {/* Payment Processor */}
+      {showPaymentProcessor && (
+        <ProductPaymentProcessor
+          open={showPaymentProcessor}
+          onClose={() => setShowPaymentProcessor(false)}
+          cartItems={cart}
+          totalAmount={getTotalPrice()}
+          onPaymentSuccess={handlePaymentSuccess}
+        />
+      )}
     </div>
   );
 }

@@ -28,7 +28,6 @@ import {
   Chip,
 } from "@mui/material";
 import PersonIcon from "@mui/icons-material/Person";
-import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import LockResetIcon from "@mui/icons-material/LockReset";
 import EmailIcon from "@mui/icons-material/Email";
@@ -341,7 +340,6 @@ export default function LoginPage() {
           >
             <Tab icon={<PersonIcon />} label="Đăng nhập" />
             <Tab icon={<PersonAddIcon />} label="Đăng ký" />
-            <Tab icon={<AdminPanelSettingsIcon />} label="Admin" />
           </Tabs>
 
           {error && (
@@ -557,68 +555,6 @@ export default function LoginPage() {
                 }}
               >
                 {loading ? <CircularProgress size={24} /> : "Đăng ký"}
-              </Button>
-            </Box>
-          )}
-
-          {tabValue === 2 && (
-            <Box
-              component="form"
-              onSubmit={handleUserLogin}
-              sx={{ padding: 2 }}
-            >
-              <AdminPanelSettingsIcon
-                sx={{
-                  fontSize: 80,
-                  color: "#ff9800",
-                  mb: 2,
-                  display: "block",
-                  margin: "0 auto",
-                }}
-              />
-              <Typography variant="h6" align="center" gutterBottom>
-                Đăng nhập quản trị
-              </Typography>
-
-              <TextField
-                label="Tên đăng nhập"
-                fullWidth
-                margin="normal"
-                required
-                value={loginData.username}
-                onChange={(e) =>
-                  setLoginData({ ...loginData, username: e.target.value })
-                }
-                disabled={loading}
-              />
-
-              <TextField
-                label="Mật khẩu"
-                type="password"
-                fullWidth
-                margin="normal"
-                required
-                value={loginData.password}
-                onChange={(e) =>
-                  setLoginData({ ...loginData, password: e.target.value })
-                }
-                disabled={loading}
-              />
-
-              <Button
-                type="submit"
-                variant="contained"
-                fullWidth
-                size="large"
-                disabled={loading}
-                sx={{
-                  marginTop: 2,
-                  backgroundColor: "#ff9800",
-                  "&:hover": { backgroundColor: "#e68900" },
-                  padding: "12px",
-                }}
-              >
-                {loading ? <CircularProgress size={24} /> : "Đăng nhập Admin"}
               </Button>
             </Box>
           )}

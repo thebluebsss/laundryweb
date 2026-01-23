@@ -41,6 +41,8 @@ import {
   Home,
   AccountCircle,
 } from "@mui/icons-material";
+import PaymentStatusBadge from "../components/PaymentStatusBadge";
+import UserOrderList from "../components/UserOrderList";
 import config from "../config/api";
 
 export default function UserProfile() {
@@ -111,7 +113,7 @@ export default function UserProfile() {
       } else {
         showMessage(
           "error",
-          data.message || "Không thể tải thông tin tài khoản"
+          data.message || "Không thể tải thông tin tài khoản",
         );
         console.error("API Error:", data);
       }
@@ -128,7 +130,7 @@ export default function UserProfile() {
     try {
       const userPhone = localStorage.getItem("userPhone");
       const response = await fetch(
-        `${config.API_BASE_URL}/bookings/phone/${userPhone}`
+        `${config.API_BASE_URL}/bookings/phone/${userPhone}`,
       );
 
       const data = await response.json();
@@ -575,91 +577,8 @@ export default function UserProfile() {
                 </Box>
               )}
 
-              {/* Tab 2: Bookings */}
-              {currentTab === 2 && (
-                <Box>
-                  <Typography variant="h6" gutterBottom>
-                    Đơn hàng của tôi ({bookings.length})
-                  </Typography>
-
-                  {loadingBookings ? (
-                    <Box
-                      sx={{ display: "flex", justifyContent: "center", p: 4 }}
-                    >
-                      <CircularProgress />
-                    </Box>
-                  ) : bookings.length === 0 ? (
-                    <Box sx={{ textAlign: "center", py: 4 }}>
-                      <ShoppingBag
-                        sx={{ fontSize: 60, color: "grey.400", mb: 2 }}
-                      />
-                      <Typography color="textSecondary">
-                        Bạn chưa có đơn hàng nào
-                      </Typography>
-                    </Box>
-                  ) : (
-                    <TableContainer component={Paper} sx={{ mt: 2 }}>
-                      <Table>
-                        <TableHead>
-                          <TableRow sx={{ bgcolor: "#f5f5f5" }}>
-                            <TableCell>
-                              <strong>Mã đơn</strong>
-                            </TableCell>
-                            <TableCell>
-                              <strong>Dịch vụ</strong>
-                            </TableCell>
-                            <TableCell>
-                              <strong>Ngày đặt</strong>
-                            </TableCell>
-                            <TableCell>
-                              <strong>Trạng thái</strong>
-                            </TableCell>
-                            <TableCell align="center">
-                              <strong>Chi tiết</strong>
-                            </TableCell>
-                          </TableRow>
-                        </TableHead>
-                        <TableBody>
-                          {bookings.map((booking) => (
-                            <TableRow key={booking._id} hover>
-                              <TableCell>
-                                <Typography
-                                  variant="body2"
-                                  sx={{ fontFamily: "monospace" }}
-                                >
-                                  #{booking._id.slice(-8)}
-                                </Typography>
-                              </TableCell>
-                              <TableCell>{booking.service}</TableCell>
-                              <TableCell>
-                                {formatDate(booking.createdAt)}
-                              </TableCell>
-                              <TableCell>
-                                <Chip
-                                  label={getStatusText(booking.status)}
-                                  color={getStatusColor(booking.status)}
-                                  size="small"
-                                />
-                              </TableCell>
-                              <TableCell align="center">
-                                <IconButton
-                                  color="primary"
-                                  onClick={() => {
-                                    setSelectedBooking(booking);
-                                    setOpenBookingDialog(true);
-                                  }}
-                                >
-                                  <Visibility />
-                                </IconButton>
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </TableContainer>
-                  )}
-                </Box>
-              )}
+              {/* Tab 2: Orders */}
+              {currentTab === 2 && <UserOrderList />}
             </CardContent>
           </Card>
         </Grid>
@@ -711,7 +630,7 @@ export default function UserProfile() {
                 <Typography variant="body1">
                   {selectedBooking.pickupDate
                     ? new Date(selectedBooking.pickupDate).toLocaleDateString(
-                        "vi-VN"
+                        "vi-VN",
                       )
                     : "Chưa có"}
                 </Typography>
@@ -723,7 +642,7 @@ export default function UserProfile() {
                 <Typography variant="body1">
                   {selectedBooking.deliveryDate
                     ? new Date(selectedBooking.deliveryDate).toLocaleDateString(
-                        "vi-VN"
+                        "vi-VN",
                       )
                     : "Chưa có"}
                 </Typography>

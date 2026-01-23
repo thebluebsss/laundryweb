@@ -37,7 +37,10 @@ import {
   HourglassEmpty,
   LocalShipping,
   Cancel,
+  Payment,
 } from "@mui/icons-material";
+import PaymentStatusBadge from "../components/PaymentStatusBadge";
+import PaymentStatusUpdater from "../components/PaymentStatusUpdater";
 import config from "../config/api";
 const API_BASE_URL = config.API_BASE_URL;
 
@@ -48,6 +51,7 @@ export default function OrderManagement() {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [openDetailDialog, setOpenDetailDialog] = useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [openPaymentDialog, setOpenPaymentDialog] = useState(false);
   const [orderToDelete, setOrderToDelete] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -72,7 +76,7 @@ export default function OrderManagement() {
     setLoading(true);
     try {
       const response = await fetch(
-        `${API_BASE_URL}/bookings?page=${currentPage}&limit=${ordersPerPage}`
+        `${API_BASE_URL}/bookings?page=${currentPage}&limit=${ordersPerPage}`,
       );
       const data = await response.json();
 
@@ -113,7 +117,7 @@ export default function OrderManagement() {
     setLoading(true);
     try {
       const response = await fetch(
-        `${API_BASE_URL}/bookings/phone/${searchPhone.trim()}`
+        `${API_BASE_URL}/bookings/phone/${searchPhone.trim()}`,
       );
       const data = await response.json();
 
@@ -174,7 +178,7 @@ export default function OrderManagement() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ status: newStatus }),
-        }
+        },
       );
 
       const data = await response.json();
@@ -200,7 +204,7 @@ export default function OrderManagement() {
         `${API_BASE_URL}/bookings/${orderToDelete._id}`,
         {
           method: "DELETE",
-        }
+        },
       );
 
       const data = await response.json();
@@ -416,6 +420,9 @@ export default function OrderManagement() {
                       <TableCell>
                         <strong>Trạng thái</strong>
                       </TableCell>
+                      <TableCell>
+                        <strong>Thanh toán</strong>
+                      </TableCell>
                       <TableCell align="center">
                         <strong>Thao tác</strong>
                       </TableCell>
@@ -424,7 +431,7 @@ export default function OrderManagement() {
                   <TableBody>
                     {filteredOrders.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={7} align="center">
+                        <TableCell colSpan={8} align="center">
                           <Typography color="textSecondary">
                             Không có đơn hàng nào
                           </Typography>
@@ -447,6 +454,12 @@ export default function OrderManagement() {
                               size="small"
                             />
                           </TableCell>
+                          <TableCell>
+                            <PaymentStatusBadge
+                              status={order.paymentStatus}
+                              size="small"
+                            />
+                          </TableCell>
                           <TableCell align="center">
                             <IconButton
                               color="primary"
@@ -454,6 +467,16 @@ export default function OrderManagement() {
                               title="Xem chi tiết"
                             >
                               <Visibility />
+                            </IconButton>
+                            <IconButton
+                              color="info"
+                              onClick={() => {
+                                setSelectedOrder(order);
+                                setOpenPaymentDialog(true);
+                              }}
+                              title="Cập nhật thanh toán"
+                            >
+                              <Payment />
                             </IconButton>
                             <IconButton
                               color="error"
@@ -575,6 +598,25 @@ export default function OrderManagement() {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Payment Status Update Dialog */}
+      <PaymentStatusUpdater
+        open={openPaymentDialog}
+        onClose={() => setOpenPaymentDialog(false)}
+        booking={selectedOrder}
+        onUpdate={(updatedOrder) => {
+          setOrders(
+            orders.map((order) =>
+              order._id === updatedOrder._id ? updatedOrder : order,
+            ),
+          );
+          setFilteredOrders(
+            filteredOrders.map((order) =>
+              order._id === updatedOrder._id ? updatedOrder : order,
+            ),
+          );
+        }}
+      />
     </Box>
   );
 }
