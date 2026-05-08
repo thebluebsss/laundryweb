@@ -33,8 +33,6 @@ import { useCart } from "../contexts/CartContext";
 import ProductPaymentProcessor from "./ProductPaymentProcessor";
 
 const CartDrawer = ({ open, onClose }) => {
-  console.log("🛒 CartDrawer rendered with open:", open);
-
   const {
     items,
     removeItem,
@@ -43,8 +41,6 @@ const CartDrawer = ({ open, onClose }) => {
     getTotalPrice,
     getTotalItems,
   } = useCart();
-
-  console.log("🛒 Cart items:", items);
 
   const [showPayment, setShowPayment] = useState(false);
   const [showLoginDialog, setShowLoginDialog] = useState(false);
@@ -76,8 +72,6 @@ const CartDrawer = ({ open, onClose }) => {
       return;
     }
 
-    console.log("Starting checkout with items:", items);
-    console.log("Total price:", getTotalPrice());
     setShowPayment(true);
   };
 
@@ -391,12 +385,7 @@ const CartDrawer = ({ open, onClose }) => {
                   </Button>
                   <Button
                     variant="contained"
-                    onClick={() => {
-                      console.log("🔥 THANH TOÁN BUTTON CLICKED!");
-                      console.log("Items:", items);
-                      console.log("Total price:", getTotalPrice());
-                      handleCheckout();
-                    }}
+                    onClick={handleCheckout}
                     startIcon={<Payment />}
                     sx={{
                       flex: 2,
@@ -421,16 +410,10 @@ const CartDrawer = ({ open, onClose }) => {
       {showPayment && (
         <ProductPaymentProcessor
           open={showPayment}
-          onClose={() => {
-            console.log("Closing payment processor");
-            setShowPayment(false);
-          }}
+          onClose={() => setShowPayment(false)}
           cartItems={items}
           totalAmount={getTotalPrice()}
-          onPaymentSuccess={() => {
-            console.log("Payment success callback");
-            handlePaymentSuccess();
-          }}
+          onPaymentSuccess={handlePaymentSuccess}
         />
       )}
 

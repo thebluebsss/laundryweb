@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   AppBar,
@@ -9,7 +9,7 @@ import {
   Avatar,
   Chip,
 } from "@mui/material";
-import { ExitToApp, Person } from "@mui/icons-material";
+import { ExitToApp } from "@mui/icons-material";
 import CartIcon from "./CartIcon";
 import CartDrawerImproved from "./CartDrawer";
 
@@ -18,8 +18,6 @@ export default function Header() {
   const userRole = localStorage.getItem("userRole");
   const userName = localStorage.getItem("userName");
   const [cartOpen, setCartOpen] = useState(false);
-
-  console.log("🏠 Header rendered, cartOpen:", cartOpen);
 
   const handleLogout = () => {
     localStorage.clear();
@@ -59,12 +57,7 @@ export default function Header() {
           <Box sx={{ display: "flex", alignItems: "center", gap: 3 }}>
             {(userRole === "guest" || userRole === "user") && (
               <>
-                <CartIcon
-                  onClick={() => {
-                    console.log("🛒 Opening cart drawer");
-                    setCartOpen(true);
-                  }}
-                />
+                <CartIcon onClick={() => setCartOpen(true)} />
 
                 <Chip
                   avatar={

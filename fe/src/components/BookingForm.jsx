@@ -48,8 +48,7 @@ export default function BookingForm({ onSuccess }) {
   const [dryCleaningItems, setDryCleaningItems] = useState(false);
   const [notes, setNotes] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("cod");
-  const [estimatedWeight, setEstimatedWeight] = useState(3); // Default 3kg
-
+  const [estimatedWeight, setEstimatedWeight] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
@@ -323,7 +322,7 @@ export default function BookingForm({ onSuccess }) {
             mb: 3,
           }}
         >
-          🧺 Đặt Lịch Giặt Là
+          Đặt Lịch Giặt Là
         </Typography>
 
         {message && (
@@ -543,7 +542,7 @@ export default function BookingForm({ onSuccess }) {
                 fontWeight: "bold",
               }}
             >
-              ⚖️ Ước tính khối lượng
+              Ước tính khối lượng
             </Typography>
             <Divider sx={{ mb: 2 }} />
 
@@ -585,7 +584,7 @@ export default function BookingForm({ onSuccess }) {
 
             <Alert severity="info" sx={{ mb: 2 }}>
               <Typography variant="body2">
-                <strong>💡 Hướng dẫn ước tính:</strong>
+                <strong> Hướng dẫn ước tính:</strong>
               </Typography>
               <ul style={{ margin: "8px 0 0 0", paddingLeft: 20 }}>
                 <li>
@@ -608,19 +607,15 @@ export default function BookingForm({ onSuccess }) {
               </ul>
             </Alert>
 
-            <Typography
-              variant="caption"
-              color="text.secondary"
-              sx={{ fontStyle: "italic" }}
-            >
-              ⚠️ Khối lượng thực tế sẽ được cân chính xác khi lấy đồ. Giá cuối
-              cùng có thể thay đổi.
-            </Typography>
+            <Alert severity="warning">
+              ....Khối lượng thực tế sẽ được cân chính xác khi lấy đồ. Giá cuối
+              cùng có thể thay đổi....
+            </Alert>
           </Paper>
         )}
 
         <DatePicker
-          label="Ngày lấy đồ *"
+          label="Ngày lấy đồ"
           value={pickupDate}
           onChange={(newValue) => setPickupDate(newValue)}
           slotProps={{
@@ -632,7 +627,7 @@ export default function BookingForm({ onSuccess }) {
         />
 
         <DatePicker
-          label="Ngày trả đồ (Ngày bắt đầu) *"
+          label="Ngày trả đồ (Ngày bắt đầu)"
           value={deliveryDate}
           onChange={(newValue) => setDeliveryDate(newValue)}
           slotProps={{
@@ -931,7 +926,7 @@ export default function BookingForm({ onSuccess }) {
               Đang xử lý...
             </Box>
           ) : (
-            "🚀 ĐẶT LỊCH NGAY"
+            "ĐẶT LỊCH NGAY"
           )}
         </Button>
 

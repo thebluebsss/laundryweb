@@ -35,7 +35,6 @@ function App() {
   useEffect(() => {
     const checkUserRole = () => {
       const role = localStorage.getItem("userRole");
-      console.log("App.jsx - Current user role:", role);
       setUserRole(role);
     };
 

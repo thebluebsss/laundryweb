@@ -47,9 +47,7 @@ export default function AdminDashboard() {
               color: "white",
               textShadow: "0 2px 10px rgba(0,0,0,0.2)",
             }}
-          >
-            🎛️ Quản trị hệ thống
-          </Typography>
+          ></Typography>
           <Typography
             variant="subtitle1"
             sx={{

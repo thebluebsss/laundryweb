@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   Grid,
   Card,
@@ -54,8 +54,6 @@ import config from "../config/api";
 const API_BASE_URL = config.API_BASE_URL;
 
 export default function ProductOrderManagement() {
-  console.log("🛒 ProductOrderManagement component loaded");
-
   const [orders, setOrders] = useState([]);
   const [filteredOrders, setFilteredOrders] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -94,30 +92,25 @@ export default function ProductOrderManagement() {
         url += `&status=${statusFilter}`;
       }
 
-      console.log("🔍 Fetching orders from:", url);
-
       const response = await fetch(url, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       });
 
-      console.log("📡 Response status:", response.status);
-
       if (!response.ok) {
         const errorText = await response.text();
-        console.error("❌ Response error:", errorText);
         throw new Error(`HTTP ${response.status}: ${errorText}`);
       }
 
       const data = await response.json();
-      console.log("📋 Orders data:", data);
 
       if (data.success) {
-        setOrders(data.data);
-        setFilteredOrders(data.data);
-        setTotalPages(data.pagination.totalPages);
-        console.log("✅ Loaded", data.data.length, "orders");
+        // Backend trả về { success, message, data: { orders, pagination } }
+        const { orders, pagination } = data.data;
+        setOrders(orders);
+        setFilteredOrders(orders);
+        setTotalPages(pagination.pages);
       } else {
         setErrorMessage("Không thể tải danh sách đơn hàng: " + data.message);
       }
@@ -131,9 +124,6 @@ export default function ProductOrderManagement() {
 
   const loadStats = async () => {
     try {
-      console.log("📊 Loading stats...");
-
-      // Since we don't have a specific stats endpoint for orders, we'll calculate from the data
       const response = await fetch(`${API_BASE_URL}/admin/orders?limit=1000`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -143,7 +133,8 @@ export default function ProductOrderManagement() {
       if (response.ok) {
         const data = await response.json();
         if (data.success) {
-          const allOrders = data.data;
+          // Backend trả về { success, message, data: { orders, pagination } }
+          const allOrders = data.data.orders || data.data;
           const stats = {
             total: allOrders.length,
             pending: allOrders.filter((o) => o.orderStatus === "pending")
@@ -157,7 +148,6 @@ export default function ProductOrderManagement() {
             cancelled: allOrders.filter((o) => o.orderStatus === "cancelled")
               .length,
           };
-          console.log("📊 Stats:", stats);
           setStats(stats);
         }
       }
@@ -204,8 +194,6 @@ export default function ProductOrderManagement() {
   const handleViewDetail = async (order) => {
     setLoading(true);
     try {
-      console.log("👁️ Viewing order details:", order._id);
-
       const response = await fetch(`${API_BASE_URL}/orders/${order._id}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -221,7 +209,6 @@ export default function ProductOrderManagement() {
       if (data.success) {
         setSelectedOrder(data.data);
         setOpenDetailDialog(true);
-        console.log("✅ Order details loaded");
       } else {
         setErrorMessage("Không thể tải chi tiết đơn hàng: " + data.message);
       }

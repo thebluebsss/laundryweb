@@ -40,8 +40,9 @@ const equipmentSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
-const Equipment = mongoose.model("Equipment", equipmentSchema);
+const Equipment =
+  mongoose.models.Equipment || mongoose.model("Equipment", equipmentSchema);
 export default Equipment;

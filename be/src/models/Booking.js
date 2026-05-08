@@ -153,4 +153,7 @@ bookingSchema.index({ phone: 1 });
 bookingSchema.index({ createdAt: -1 });
 bookingSchema.index({ status: 1 });
 
-export default mongoose.model("Booking", bookingSchema);
+const Booking =
+  mongoose.models.Booking || mongoose.model("Booking", bookingSchema);
+
+export default Booking;

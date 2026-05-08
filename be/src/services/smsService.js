@@ -22,7 +22,6 @@ export const sendOTPSMS = async (phone, otp) => {
       to: formattedPhone,
     });
 
-    console.log("✅ SMS đã gửi thành công:", message.sid);
     return { success: true, messageSid: message.sid };
   } catch (error) {
     console.error("❌ Lỗi gửi SMS:", error);
@@ -46,7 +45,6 @@ export const sendPasswordResetSMS = async (phone) => {
       to: formattedPhone,
     });
 
-    console.log(" SMS xác nhận đã gửi:", message.sid);
     return { success: true, messageSid: message.sid };
   } catch (error) {
     console.error(" Lỗi gửi SMS xác nhận:", error);

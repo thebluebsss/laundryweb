@@ -5,16 +5,6 @@ export default function ProtectedRoute({ children, requiredRole }) {
   const token = localStorage.getItem("token");
   const userRole = localStorage.getItem("userRole");
 
-  // Log for debugging
-  console.log(
-    "ProtectedRoute - Token:",
-    !!token,
-    "Role:",
-    userRole,
-    "Required:",
-    requiredRole
-  );
-
   // If no token, redirect to login
   if (!token || !userRole) {
     console.log("No token/role - redirecting to login");
@@ -43,7 +33,5 @@ export default function ProtectedRoute({ children, requiredRole }) {
       }
     }
   }
-
-  console.log("Access granted");
   return children;
 }

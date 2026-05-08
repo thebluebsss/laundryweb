@@ -99,14 +99,17 @@ export default function LoginPage() {
       const data = await response.json();
 
       if (data.success) {
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("userRole", data.user.role);
-        localStorage.setItem("userId", data.user._id);
-        localStorage.setItem("userName", data.user.fullName);
-        localStorage.setItem("userPhone", data.user.phone);
-        localStorage.setItem("userAddress", data.user.address || "");
+        // Backend trả về data trong data.data
+        const { token, user } = data.data;
 
-        if (data.user.role === "admin") {
+        localStorage.setItem("token", token);
+        localStorage.setItem("userRole", user.role);
+        localStorage.setItem("userId", user.id);
+        localStorage.setItem("userName", user.fullName);
+        localStorage.setItem("userPhone", user.phone);
+        localStorage.setItem("userAddress", user.address || "");
+
+        if (user.role === "admin") {
           navigate("/admin");
         } else {
           navigate("/home");
@@ -160,12 +163,15 @@ export default function LoginPage() {
       if (data.success) {
         setSuccess("Đăng ký thành công! Đang chuyển hướng...");
 
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("userRole", data.user.role);
-        localStorage.setItem("userId", data.user._id);
-        localStorage.setItem("userName", data.user.fullName);
-        localStorage.setItem("userPhone", data.user.phone);
-        localStorage.setItem("userAddress", data.user.address || "");
+        // Backend trả về data trong data.data
+        const { token, user } = data.data;
+
+        localStorage.setItem("token", token);
+        localStorage.setItem("userRole", user.role);
+        localStorage.setItem("userId", user.id);
+        localStorage.setItem("userName", user.fullName);
+        localStorage.setItem("userPhone", user.phone);
+        localStorage.setItem("userAddress", user.address || "");
 
         setTimeout(() => {
           navigate("/home");

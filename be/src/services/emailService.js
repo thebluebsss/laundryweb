@@ -136,7 +136,6 @@ export const sendOTPEmail = async (email, otp, userName = "Khách hàng") => {
     };
 
     const info = await transporter.sendMail(mailOptions);
-    console.log(" Email đã gửi thành công:", info.messageId);
     return { success: true, messageId: info.messageId };
   } catch (error) {
     console.error(" Lỗi gửi email:", error);
@@ -213,7 +212,6 @@ export const sendPasswordResetConfirmation = async (email, userName) => {
     };
 
     await transporter.sendMail(mailOptions);
-    console.log(" Email xác nhận đã gửi thành công");
     return { success: true };
   } catch (error) {
     console.error(" Lỗi gửi email xác nhận:", error);

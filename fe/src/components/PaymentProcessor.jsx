@@ -150,7 +150,42 @@ const PaymentProcessor = ({
           }))
         : [
             {
-              name: `Dịch vụ ${paymentData.service}`,
+              name: `Dịch vụ  
+                ${service === "giat-say-thuong" && "Giặt sấy thường"}
+                ${service === "giat-kho-kg" && "Giặt khô"}
+                ${service === "giat-ui-kg" && "Giặt ủi"}
+                ${service === "combo-gia-dinh" && "Combo gia đình 5kg"}
+                ${service === "combo-sinh-vien" && "Combo sinh viên 3kg"}
+                ${service === "combo-van-phong" && "Combo văn phòng 2kg"}
+                ${service === "bo-complet" && "Bộ Complete"}
+                ${service === "bo-ki-gia" && "Bộ kí giả"}
+                ${service === "bo-vet-nu" && "Bộ vét nữ"}
+                ${service === "bo-vet-khong-lot" && "Bộ vét không lót"}
+                ${service === "bo-the-thao" && "Bộ đồ thể thao"}
+                ${service === "bo-ngu" && "Bộ đồ ngủ"}
+                ${service === "bo-quan-ao-gio" && "Bộ quần áo gió mỏng"}
+                ${service === "bo-quan-ao-dai-nhung" && "Bộ quần áo dài nhung"}
+                ${service === "bo-quan-ao-dai-thuong" && "Bộ quần áo dài thường"}
+                ${service === "ao-so-mi" && "Áo sơ mi"}
+                ${service === "ao-vest" && "Áo vest"}
+                ${service === "ao-khoac" && "Áo khoác"}
+                ${service === "ao-len" && "Áo len"}
+                ${service === "ao-da" && "Áo dạ"}
+                ${service === "quan-tay" && "Quần tây"}
+                ${service === "quan-jean" && "Quần jean"}
+                ${service === "quan-kaki" && "Quần kaki"}
+                ${service === "quan-short" && "Quần short"}
+                ${service === "vay-cong-so" && "Váy công sở"}
+                ${service === "vay-da-hoi" && "Váy dạ hội"}
+                ${service === "vay-jean" && "Váy jean"}
+                ${service === "chan-don" && "Chăn đơn"}
+                ${service === "chan-doi" && "Chăn đôi"}
+                ${service === "goi" && "Gối"}
+                ${service === "nem" && "Nệm"}
+                ${service === "ao-cuoi" && "Áo cưới"}
+                ${service === "vay-cuoi" && "Váy cưới"}
+                ${service === "do-da" && "Đồ da"}
+                ${service === "do-long-thu" && "Đồ lông thú"}`,
               quantity: 1,
               price: paymentData.totalAmount,
             },

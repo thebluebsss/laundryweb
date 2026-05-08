@@ -101,13 +101,15 @@ export default function UserManagement() {
           headers: {
             Authorization: `Bearer ${getToken()}`,
           },
-        }
+        },
       );
       const data = await response.json();
 
       if (data.success) {
-        setUsers(data.data);
-        setTotalPages(data.pagination.totalPages);
+        // Backend trả về { success, message, data: { users, pagination } }
+        const { users, pagination } = data.data;
+        setUsers(users);
+        setTotalPages(pagination.pages);
       } else {
         setErrorMessage(data.message || "Không thể tải danh sách người dùng");
       }
@@ -129,7 +131,7 @@ export default function UserManagement() {
       const data = await response.json();
 
       if (data.success) {
-        setStats(data.stats);
+        setStats(data.data);
       }
     } catch (error) {
       console.error("Lỗi thống kê:", error);
@@ -201,7 +203,7 @@ export default function UserManagement() {
             Authorization: `Bearer ${getToken()}`,
           },
           body: JSON.stringify(updateData),
-        }
+        },
       );
 
       const data = await response.json();
@@ -231,7 +233,7 @@ export default function UserManagement() {
           headers: {
             Authorization: `Bearer ${getToken()}`,
           },
-        }
+        },
       );
 
       const data = await response.json();
@@ -260,7 +262,7 @@ export default function UserManagement() {
           headers: {
             Authorization: `Bearer ${getToken()}`,
           },
-        }
+        },
       );
 
       const data = await response.json();

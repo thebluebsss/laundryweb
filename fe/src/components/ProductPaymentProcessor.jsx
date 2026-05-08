@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -36,19 +36,11 @@ const ProductPaymentProcessor = ({
   totalAmount,
   onPaymentSuccess,
 }) => {
-  console.log("ProductPaymentProcessor rendered with:", {
-    open,
-    cartItems: cartItems?.length,
-    totalAmount,
-  });
-
   if (!open) {
-    console.log("Dialog is not open, returning null");
     return null;
   }
 
   if (!cartItems || cartItems.length === 0) {
-    console.log("No cart items, returning null");
     return null;
   }
 
@@ -91,15 +83,9 @@ const ProductPaymentProcessor = ({
   };
 
   const handleNext = async () => {
-    console.log("handleNext called, activeStep:", activeStep);
-
     if (activeStep === 0) {
-      // Move to payment selection
-      console.log("Moving to payment selection");
       setActiveStep(1);
     } else if (activeStep === 1) {
-      // Process order creation
-      console.log("Processing order creation");
       await createOrder();
     }
   };
@@ -110,13 +96,10 @@ const ProductPaymentProcessor = ({
 
     try {
       const token = localStorage.getItem("token");
-      console.log("Token:", token ? "exists" : "missing");
 
       if (!token) {
         throw new Error("Bạn cần đăng nhập để thực hiện thanh toán");
       }
-
-      console.log("Creating order with cart items:", cartItems);
 
       const orderPayload = {
         items: cartItems.map((item) => ({
@@ -131,9 +114,6 @@ const ProductPaymentProcessor = ({
         orderType: "product_purchase",
       };
 
-      console.log("Order payload:", orderPayload);
-      console.log("API URL:", `${config.API_BASE_URL}/orders`);
-
       const response = await fetch(`${config.API_BASE_URL}/orders`, {
         method: "POST",
         headers: {
@@ -143,28 +123,22 @@ const ProductPaymentProcessor = ({
         body: JSON.stringify(orderPayload),
       });
 
-      console.log("Response status:", response.status);
-
       if (!response.ok) {
         const errorText = await response.text();
-        console.error("Response error:", errorText);
         throw new Error(`HTTP ${response.status}: ${errorText}`);
       }
 
       const result = await response.json();
-      console.log("Response result:", result);
 
       if (result.success) {
         setOrderData(result.data);
 
         if (paymentMethod === "cod") {
-          // COD - go directly to success
           setActiveStep(2);
           setTimeout(() => {
             onPaymentSuccess();
           }, 2000);
         } else {
-          // Other payment methods - show payment processor
           setShowPaymentProcessor(true);
         }
       } else {
@@ -183,15 +157,6 @@ const ProductPaymentProcessor = ({
     setActiveStep(2);
     setTimeout(() => {
       onPaymentSuccess();
-      // Optional: redirect to order history after a delay
-      setTimeout(() => {
-        if (window.location.pathname !== "/orders") {
-          // Only suggest navigation, don't force it
-          console.log(
-            "Order completed successfully. You can view your orders in the order history.",
-          );
-        }
-      }, 3000);
     }, 2000);
   };
 
@@ -201,8 +166,6 @@ const ProductPaymentProcessor = ({
   };
 
   const renderOrderSummary = () => {
-    console.log("renderOrderSummary called with cartItems:", cartItems);
-
     if (!cartItems || cartItems.length === 0) {
       return (
         <Box>
@@ -292,8 +255,6 @@ const ProductPaymentProcessor = ({
   };
 
   const renderPaymentSelection = () => {
-    console.log("renderPaymentSelection called");
-
     return (
       <Box>
         <PaymentMethodSelector
@@ -364,8 +325,6 @@ const ProductPaymentProcessor = ({
   );
 
   const getStepContent = (step) => {
-    console.log("getStepContent called with step:", step);
-
     switch (step) {
       case 0:
         return renderOrderSummary();
@@ -397,10 +356,6 @@ const ProductPaymentProcessor = ({
         </DialogTitle>
 
         <DialogContent>
-          <Typography variant="body1" sx={{ mb: 2 }}>
-            Debug: Dialog is open with {cartItems?.length || 0} items
-          </Typography>
-
           <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
             {steps.map((label) => (
               <Step key={label}>
@@ -436,10 +391,7 @@ const ProductPaymentProcessor = ({
 
               <Button
                 variant="contained"
-                onClick={() => {
-                  console.log("Next button clicked, activeStep:", activeStep);
-                  handleNext();
-                }}
+                onClick={handleNext}
                 disabled={processing}
                 startIcon={processing && <CircularProgress size={20} />}
               >

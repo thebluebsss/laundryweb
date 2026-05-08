@@ -97,7 +97,7 @@ const orderSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 orderSchema.index({ userId: 1 });
@@ -112,13 +112,13 @@ orderSchema.virtual("totalItems").get(function () {
 orderSchema.virtual("subtotal").get(function () {
   return this.items.reduce(
     (total, item) => total + item.price * item.quantity,
-    0
+    0,
   );
 });
 
 orderSchema.set("toJSON", { virtuals: true });
 orderSchema.set("toObject", { virtuals: true });
 
-const Order = mongoose.model("Order", orderSchema);
+const Order = mongoose.models.Order || mongoose.model("Order", orderSchema);
 
 export default Order;

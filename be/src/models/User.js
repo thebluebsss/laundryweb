@@ -91,6 +91,7 @@ userSchema.methods.toJSON = function () {
   return user;
 };
 
-const User = mongoose.model("User", userSchema);
+// Kiểm tra xem model đã tồn tại chưa để tránh lỗi OverwriteModelError
+const User = mongoose.models.User || mongoose.model("User", userSchema);
 
 export default User;

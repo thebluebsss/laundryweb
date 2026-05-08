@@ -75,15 +75,23 @@ export default function OrderManagement() {
   const loadOrders = async () => {
     setLoading(true);
     try {
+      const token = localStorage.getItem("token");
       const response = await fetch(
         `${API_BASE_URL}/bookings?page=${currentPage}&limit=${ordersPerPage}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
       );
       const data = await response.json();
 
       if (data.success) {
-        setOrders(data.data);
-        setFilteredOrders(data.data);
-        setTotalPages(data.pagination.totalPages);
+        // Backend trả về { success, message, data: { bookings, pagination } }
+        const { bookings, pagination } = data.data;
+        setOrders(bookings);
+        setFilteredOrders(bookings);
+        setTotalPages(pagination.pages);
       } else {
         setErrorMessage("Không thể tải danh sách đơn hàng");
       }
@@ -97,11 +105,16 @@ export default function OrderManagement() {
 
   const loadStats = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/stats`);
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${API_BASE_URL}/stats`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       const data = await response.json();
 
       if (data.success) {
-        setStats(data.stats);
+        setStats(data.data);
       }
     } catch (error) {
       console.error("Lỗi khi tải thống kê:", error);

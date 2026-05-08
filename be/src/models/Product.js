@@ -68,12 +68,13 @@ const productSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 productSchema.index({ category: 1, isActive: 1 });
 productSchema.index({ tags: 1 });
 
-const Product = mongoose.model("Product", productSchema);
+const Product =
+  mongoose.models.Product || mongoose.model("Product", productSchema);
 
 export default Product;

@@ -1,10 +1,8 @@
-import React, { createContext, useContext, useReducer, useEffect } from "react";
+import { createContext, useContext, useReducer, useEffect } from "react";
 
 const CartContext = createContext();
 
 const cartReducer = (state, action) => {
-  console.log("🛒 Cart reducer action:", action.type, action.payload);
-
   switch (action.type) {
     case "ADD_ITEM":
       const existingItem = state.items.find(
