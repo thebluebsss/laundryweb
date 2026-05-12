@@ -3,6 +3,30 @@ import { NotFoundError } from "../utils/errorHandler.js";
 import { calculateServicePrice } from "./paymentService.js";
 
 /**
+ * Lấy bookings của user cụ thể
+ */
+export const getBookingsByUserId = async (userId, page = 1, limit = 10) => {
+  const skip = (page - 1) * limit;
+
+  const query = { userId };
+
+  const [bookings, total] = await Promise.all([
+    Booking.find(query).sort({ createdAt: -1 }).skip(skip).limit(limit),
+    Booking.countDocuments(query),
+  ]);
+
+  return {
+    bookings,
+    pagination: {
+      page,
+      limit,
+      total,
+      pages: Math.ceil(total / limit),
+    },
+  };
+};
+
+/**
  * Lấy danh sách bookings với pagination
  */
 export const getBookings = async (filters = {}, page = 1, limit = 10) => {

@@ -3,6 +3,24 @@ import { successResponse } from "../utils/response.js";
 import * as bookingService from "../services/bookingService.js";
 
 /**
+ * @desc    Lấy danh sách bookings của user hiện tại
+ * @route   GET /api/bookings/my
+ * @access  Private
+ */
+export const getMyBookings = asyncHandler(async (req, res) => {
+  const { page, limit } = req.query;
+  const userId = req.user._id;
+
+  const result = await bookingService.getBookingsByUserId(
+    userId,
+    parseInt(page) || 1,
+    parseInt(limit) || 10,
+  );
+
+  successResponse(res, result, "Lấy danh sách bookings thành công");
+});
+
+/**
  * @desc    Lấy danh sách bookings
  * @route   GET /api/bookings
  * @access  Private/Admin
@@ -46,7 +64,13 @@ export const getBookingsByPhone = asyncHandler(async (req, res) => {
  * @access  Public
  */
 export const createBooking = asyncHandler(async (req, res) => {
-  const booking = await bookingService.createBooking(req.body);
+  // Thêm userId nếu user đã đăng nhập
+  const bookingData = {
+    ...req.body,
+    userId: req.user?._id, // Optional: chỉ thêm nếu user đã login
+  };
+
+  const booking = await bookingService.createBooking(bookingData);
   successResponse(res, booking, "Tạo booking thành công", 201);
 });
 

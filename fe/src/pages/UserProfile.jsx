@@ -82,7 +82,7 @@ export default function UserProfile() {
 
   useEffect(() => {
     loadUserProfile();
-  }, []);
+  }, [bookings]);
 
   useEffect(() => {
     if (currentTab === 2) {

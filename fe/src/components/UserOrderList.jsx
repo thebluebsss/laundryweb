@@ -36,15 +36,15 @@ const UserOrderList = () => {
   const fetchUserOrders = async () => {
     try {
       const token = localStorage.getItem("token");
-
-      // Fetch bookings (service orders)
-      const bookingsResponse = await fetch(`${config.API_BASE_URL}/bookings`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
+      const bookingsResponse = await fetch(
+        `${config.API_BASE_URL}/bookings/my`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         },
-      });
+      );
 
-      // Fetch product orders
       const ordersResponse = await fetch(`${config.API_BASE_URL}/orders`, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -53,12 +53,12 @@ const UserOrderList = () => {
 
       if (bookingsResponse.ok) {
         const bookingsResult = await bookingsResponse.json();
-        setBookings(bookingsResult.data || []);
+        setBookings(bookingsResult.data?.bookings || []);
       }
 
       if (ordersResponse.ok) {
         const ordersResult = await ordersResponse.json();
-        setOrders(ordersResult.data || []);
+        setOrders(ordersResult.data?.orders || []);
       }
     } catch (err) {
       setError("Không thể tải danh sách đơn hàng");
@@ -129,12 +129,13 @@ const UserOrderList = () => {
   const allOrders = [
     ...bookings.map((booking) => ({ ...booking, type: "service" })),
     ...orders.map((order) => ({ ...order, type: "product" })),
-  ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-
+  ].sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+  );
   return (
     <Box>
       <Typography variant="h5" gutterBottom sx={{ mb: 3 }}>
-        📋 Đơn hàng của tôi
+        Đơn hàng của tôi
       </Typography>
 
       {allOrders.length === 0 ? (

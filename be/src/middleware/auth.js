@@ -4,6 +4,29 @@ import { UnauthorizedError, ForbiddenError } from "../utils/errorHandler.js";
 import User from "../models/User.js";
 
 /**
+ * Middleware xác thực JWT token (optional - không throw error nếu không có token)
+ */
+export const optionalAuth = async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+    const token = authHeader && authHeader.split(" ")[1];
+
+    if (token) {
+      const decoded = jwt.verify(token, config.jwtSecret);
+      const user = await User.findById(decoded.id).select("-password");
+
+      if (user && user.isActive) {
+        req.user = user;
+      }
+    }
+  } catch (error) {
+    // Ignore errors for optional auth
+  }
+
+  next();
+};
+
+/**
  * Middleware xác thực JWT token
  */
 export const authenticateToken = async (req, res, next) => {

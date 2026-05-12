@@ -28,9 +28,25 @@ export const getProducts = async (filters = {}) => {
   if (filters.sort === "popular") sort = { soldCount: -1 };
   if (filters.sort === "rating") sort = { rating: -1 };
 
-  const products = await Product.find(query).sort(sort);
+  // Pagination
+  const page = parseInt(filters.page) || 1;
+  const limit = parseInt(filters.limit) || 10;
+  const skip = (page - 1) * limit;
 
-  return products;
+  const [products, total] = await Promise.all([
+    Product.find(query).sort(sort).skip(skip).limit(limit),
+    Product.countDocuments(query),
+  ]);
+
+  return {
+    products,
+    pagination: {
+      page,
+      limit,
+      total,
+      pages: Math.ceil(total / limit),
+    },
+  };
 };
 
 /**

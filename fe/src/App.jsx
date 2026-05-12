@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { ThemeProvider } from "@mui/material/styles";
 import { CssBaseline } from "@mui/material";
 import Header from "./components/Header.jsx";
@@ -12,10 +12,9 @@ import AboutPage from "./pages/AboutPage.jsx";
 import ContactPage from "./pages/ContactPage.jsx";
 import Footer from "./components/Footer.jsx";
 import ChatBot from "./components/ChatBot";
-import LoginPage from "./pages/LoginPage.jsx";
+import LoginPage from "./pages/LoginPage";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import BookingForm from "./components/BookingForm.jsx";
-import AdminDashboard from "./pages/AdminDashboard.jsx";
 import BookingSuccessPage from "./pages/BookingSuccessPage.jsx";
 import ProductsPage from "./pages/ProductsPage.jsx";
 import UserProfile from "./pages/UserProfile.jsx";
@@ -23,6 +22,16 @@ import PaymentReturnPage from "./pages/PaymentReturnPage.jsx";
 import { CartProvider } from "./contexts/CartContext.jsx";
 import theme from "./theme/theme.js";
 import "./index.css";
+
+// Admin imports
+import AdminLayout from "./components/templates/AdminLayout";
+import Dashboard from "./pages/Admin/Dashboard";
+import UserManagement from "./pages/Admin/UserManagement";
+import OrderManagement from "./pages/Admin/OrderManagement";
+import ProductOrderManagement from "./pages/Admin/ProductOrderManagement";
+import ProductManagement from "./pages/Admin/ProductManagement";
+import EquipmentManagement from "./pages/Admin/EquipmentManagement";
+import Settings from "./pages/Admin/Settings";
 
 function App() {
   const [userRole, setUserRole] = useState(() =>
@@ -51,31 +60,55 @@ function App() {
   };
 
   const isLoginPage = location.pathname === "/";
+  const isAdminPage = location.pathname.startsWith("/admin");
 
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <CartProvider>
         <div className="App">
-          {userRole && !isLoginPage && <Header />}
-
-          {(userRole === "guest" || userRole === "user") && !isLoginPage && (
-            <Navbar />
-          )}
+          {/* User Layout */}
+          {userRole && !isLoginPage && !isAdminPage && <Header />}
+          {(userRole === "guest" || userRole === "user") &&
+            !isLoginPage &&
+            !isAdminPage && <Navbar />}
 
           <main>
             <Routes>
+              {/* Auth Route */}
               <Route path="/" element={<LoginPage />} />
 
+              {/* Admin Routes */}
               <Route
-                path="/admin"
+                path="/admin/*"
                 element={
                   <ProtectedRoute requiredRole="admin">
-                    <AdminDashboard />
+                    <AdminLayout>
+                      <Routes>
+                        <Route path="/" element={<Dashboard />} />
+                        <Route path="/dashboard" element={<Dashboard />} />
+                        <Route path="/users" element={<UserManagement />} />
+                        <Route path="/orders" element={<OrderManagement />} />
+                        <Route
+                          path="/product-orders"
+                          element={<ProductOrderManagement />}
+                        />
+                        <Route
+                          path="/products"
+                          element={<ProductManagement />}
+                        />
+                        <Route
+                          path="/equipment"
+                          element={<EquipmentManagement />}
+                        />
+                        <Route path="/settings" element={<Settings />} />
+                      </Routes>
+                    </AdminLayout>
                   </ProtectedRoute>
                 }
               />
 
+              {/* User Routes */}
               <Route
                 path="/home"
                 element={
@@ -230,12 +263,14 @@ function App() {
             </Routes>
           </main>
 
-          {(userRole === "guest" || userRole === "user") && !isLoginPage && (
-            <>
-              <Footer />
-              <ChatBot />
-            </>
-          )}
+          {(userRole === "guest" || userRole === "user") &&
+            !isLoginPage &&
+            !isAdminPage && (
+              <>
+                <Footer />
+                <ChatBot />
+              </>
+            )}
         </div>
       </CartProvider>
     </ThemeProvider>

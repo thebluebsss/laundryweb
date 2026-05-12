@@ -1,6 +1,10 @@
 import express from "express";
 import * as bookingController from "../controllers/bookingController.js";
-import { authenticateToken, requireAdmin } from "../middleware/auth.js";
+import {
+  authenticateToken,
+  requireAdmin,
+  optionalAuth,
+} from "../middleware/auth.js";
 import { validate } from "../utils/validators.js";
 import {
   createBookingSchema,
@@ -12,9 +16,34 @@ const router = express.Router();
 
 /**
  * @swagger
+ * /api/bookings/my:
+ *   get:
+ *     summary: Lấy danh sách bookings của user hiện tại
+ *     tags: [Bookings]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *         description: Số trang
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *         description: Số lượng items mỗi trang
+ *     responses:
+ *       200:
+ *         description: Lấy danh sách thành công
+ */
+router.get("/my", authenticateToken, bookingController.getMyBookings);
+
+/**
+ * @swagger
  * /api/bookings:
  *   get:
- *     summary: Lấy danh sách bookings
+ *     summary: Lấy danh sách tất cả bookings (Admin only)
  *     tags: [Bookings]
  *     security:
  *       - bearerAuth: []
@@ -126,6 +155,7 @@ router.get("/phone/:phone", bookingController.getBookingsByPhone);
  */
 router.post(
   "/",
+  optionalAuth,
   validate(createBookingSchema),
   bookingController.createBooking,
 );

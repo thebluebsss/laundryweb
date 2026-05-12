@@ -2,6 +2,11 @@ import mongoose from "mongoose";
 
 const bookingSchema = new mongoose.Schema(
   {
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: false, // Optional vì có thể có booking từ guest
+    },
     name: {
       type: String,
       required: true,
@@ -150,6 +155,7 @@ const bookingSchema = new mongoose.Schema(
 );
 
 bookingSchema.index({ phone: 1 });
+bookingSchema.index({ userId: 1 });
 bookingSchema.index({ createdAt: -1 });
 bookingSchema.index({ status: 1 });
 
